@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aetheria - Dormitorio</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+  <link rel="stylesheet" href="../css/dormitorio.css" />
+</head>
+<body>
+
+  <!-- Contenedor principal 390x844 -->
+  <main class="game-viewport" id="dormitorio-viewport">
+
+    <!-- FONDO Y ESCENARIO DEL DORMITORIO -->
+    <div class="background-container">
+      <img src="../assets/Diseño_Fondo_Dormitorio.png" alt="Dormitorio de Aetheria" class="bg-image" />
+    </div>
+
+    <!-- ZONA CENTRAL: MASCOTA EN EL DORMITORIO (DEBAJO DEL OVERLAY AL DORMIR) -->
+    <div class="bedroom-pet-zone" id="bedroom-pet-zone">
+      <div class="character-container is-idle" id="avatar-player">
+        <img src="../assets/Diseño_Avatar_Front.png" alt="Aetheria" class="avatar-img" id="avatar-img" />
+      </div>
+    </div>
+
+    <!-- CAPA DE OSCURECIMIENTO TOTAL (DEBAJO DE LOS BOTONES, ENCIMA DEL AVATAR DORMIDO) -->
+    <div class="sleep-overlay" id="sleep-overlay" aria-hidden="true"></div>
+
+    <!-- UI SUPERIOR: HUDS DE ESTADO CON SPRITES -->
+    <div class="status-bars">
+      <!-- HUD 1: Vida -->
+      <div class="hud-container" id="hud-health">
+        <img src="../assets/Diseño_Huds_Salud 25.png" alt="HUD Vida" class="hud-img" id="img-hud-health" />
+      </div>
+      <!-- HUD 2: Felicidad -->
+      <div class="hud-container" id="hud-happiness">
+        <img src="../assets/Diseño_Huds_Felicidad 25.png" alt="HUD Felicidad" class="hud-img" id="img-hud-happiness" />
+      </div>
+      <!-- HUD 3: Energía -->
+      <div class="hud-container" id="hud-energy">
+        <img src="../assets/Diseño_Huds_Energia 25.png" alt="HUD Energía" class="hud-img" id="img-hud-energy" />
+      </div>
+    </div>
+
+    <!-- ZONA INTERACTIVA DE LA CAMA: BOTONES DE DORMIR Y DESPERTAR -->
+    <div class="bedroom-sleep-zone" id="bedroom-sleep-zone">
+      <!-- Espacio / Botón para Dormir -->
+      <div class="sleep-action-slot" id="sleep-slot">
+        <button
+          type="button"
+          class="sleep-btn"
+          id="btn-sleep"
+          onclick="startSleeping(event)"
+          aria-pressed="false"
+          aria-label="Dormir a Aetheria"
+        >
+          <img
+            src="../assets/Diseño_Boton_Dormir.png"
+            alt="Dormir"
+            class="sleep-btn-img"
+            id="sleep-btn-img"
+          />
+        </button>
+      </div>
+
+      <!-- Espacio / Botón para Despertar -->
+      <div class="wake-action-slot is-hidden" id="wake-slot">
+        <button
+          type="button"
+          class="wake-btn"
+          id="btn-wake"
+          onclick="wakeUpPet(event)"
+          aria-pressed="false"
+          aria-label="Despertar a Aetheria"
+        >
+          <img
+            src="../assets/Diseño_Boton_Despertar.png"
+            alt="Despertar"
+            class="wake-btn-img"
+            id="wake-btn-img"
+          />
+        </button>
+      </div>
+    </div>
+
+    <!-- UI INFERIOR: 4 DOCKS VISIBLES + 4 EXTRA AL DESLIZAR (8 EN TOTAL) -->
+    <nav class="action-nav is-collapsed" id="action-nav" aria-label="Navegación de docks">
+
+      <!-- Indicador / Pestaña táctil superior -->
+      <button
+        type="button"
+        class="dock-gesture-handle"
+        id="dock-gesture-handle"
+        onclick="toggleExtraDocks()"
+        aria-expanded="false"
+        aria-label="Desliza hacia arriba o toca para desplegar más docks"
+      >
+        <span class="gesture-bar"></span>
+      </button>
+
+      <!-- Apilamiento de 2 filas de 4 docks -->
+      <div class="docks-stack" id="docks-stack">
+
+        <!-- FILA 1 (Docks principales siempre visibles) -->
+        <div class="docks-row docks-row-primary">
+          <a href="../index.html" class="nav-btn" title="Home">
+            <img src="../assets/Diseño_Docks_1.png" alt="Home" class="nav-icon" />
+          </a>
+          <a href="Cocina.html" class="nav-btn" title="Minijuego">
+            <img src="../assets/Diseño_Docks_2.png" alt="Minijuego" class="nav-icon" />
+          </a>
+          <a href="Alquimia.html" class="nav-btn" title="Cocina">
+            <img src="../assets/Diseño_Docks_3.png" alt="Cocina" class="nav-icon" />
+          </a>
+          <a href="Mini juego.html" class="nav-btn" title="Alquimia">
+            <img src="../assets/Diseño_Docks_4.png" alt="Alquimia" class="nav-icon" />
+          </a>
+        </div>
+
+        <!-- FILA 2 (Docks extra que aparecen al hacer el gesto hacia arriba) -->
+        <div class="docks-row docks-row-secondary" id="extra-docks-row">
+          <a href="Dormitorio.html" class="nav-btn active" title="Dormitorio">
+            <img src="../assets/Diseño_Docks_5.png" alt="Dormitorio" class="nav-icon" />
+          </a>
+          <a href="Cosecha.html" class="nav-btn" title="Cosecha">
+            <img src="../assets/Diseño_Docks_6.png" alt="Cosecha" class="nav-icon" />
+          </a>
+          <a href="Tienda.html" class="nav-btn" title="Tienda">
+            <img src="../assets/Diseño_Docks_7.png" alt="Tienda" class="nav-icon" />
+          </a>
+          <a href="Cosecha.html" class="nav-btn" title="Inventario">
+            <img src="../assets/Diseño_Docks_8.png" alt="Inventario" class="nav-icon" />
+          </a>
+        </div>
+
+      </div>
+    </nav>
+
+  </main>
+
+  <script>
+    // ==========================================================
+    // SECCIÓN DE ASSETS DEL DORMITORIO
+    // Pon aquí los nombres exactos de tus archivos en ../assets/
+    // ==========================================================
+    const bedroomAssets = {
+      sleepBtn: '../assets/Diseño_Boton_Dormir.png',
+      wakeBtn: '../assets/Diseño_Boton_Despertar.png',
+      avatarAwake: '../assets/Diseño_Avatar_Front.png',
+      avatarSleeping: '../assets/Diseño_Avatar_Sleep.png' // Cambia al nombre exacto de tu sprite durmiendo
+    };
+
+    // 1. Cargar memoria global del localStorage
+    const savedLevels = localStorage.getItem('userHudLevels');
+    let hudLevels = savedLevels ? JSON.parse(savedLevels) : { health: 25, happiness: 25, energy: 25 };
+
+    const hudAssets = {
+      health: {
+        25: '../assets/Diseño_Huds_Salud 25.png',
+        50: '../assets/Diseño_Huds_Salud 50.png',
+        75: '../assets/Diseño_Huds_Salud 75.png',
+        100: '../assets/Diseño_Huds_Salud 100.png'
+      },
+      happiness: {
+        25: '../assets/Diseño_Huds_Felicidad 25.png',
+        50: '../assets/Diseño_Huds_Felicidad 50.png',
+        75: '../assets/Diseño_Huds_Felicidad 75.png',
+        100: '../assets/Diseño_Huds_Felicidad 100.png'
+      },
+      energy: {
+        25: '../assets/Diseño_Huds_Energia 25.png',
+        50: '../assets/Diseño_Huds_Energia 50.png',
+        75: '../assets/Diseño_Huds_Energia 75.png',
+        100: '../assets/Diseño_Huds_Energia 100.png'
+      }
+    };
+
+    let isSleeping = false;
+    let sleepRecoveryTimer = null;
+
+    // 2. Pintar HUDs, asignar sprites de botones y activar gesto de docks al cargar
+    window.addEventListener('DOMContentLoaded', () => {
+      const sleepImg = document.getElementById('sleep-btn-img');
+      const wakeImg = document.getElementById('wake-btn-img');
+      if (sleepImg) sleepImg.src = bedroomAssets.sleepBtn;
+      if (wakeImg) wakeImg.src = bedroomAssets.wakeBtn;
+
+      updateAllHudsVisuals();
+      syncSleepVisuals();
+      initStatDecay();
+      initDockGesture();
+    });
+
+    function updateAllHudsVisuals() {
+      for (const type in hudLevels) {
+        const currentLevel = hudLevels[type];
+        const hudImg = document.getElementById(`img-hud-${type}`);
+        if (hudImg && hudAssets[type] && hudAssets[type][currentLevel]) {
+          hudImg.src = hudAssets[type][currentLevel];
+        }
+      }
+    }
+
+    function bumpHud(type, newLevel) {
+      const hudContainer = document.getElementById(`hud-${type}`);
+      const hudImg = document.getElementById(`img-hud-${type}`);
+
+      if (hudImg && hudAssets[type] && hudAssets[type][newLevel]) {
+        hudImg.src = hudAssets[type][newLevel];
+      }
+
+      if (hudContainer) {
+        hudContainer.classList.remove('hud-animate');
+        void hudContainer.offsetWidth;
+        hudContainer.classList.add('hud-animate');
+      }
+    }
+
+    // 3. Desgaste automático cada 1 minuto (cuando no está durmiendo)
+    function initStatDecay() {
+      setInterval(() => {
+        if (isSleeping) return;
+        let changed = false;
+
+        if (hudLevels.energy > 25) {
+          hudLevels.energy -= 25;
+          changed = true;
+        }
+        if (hudLevels.happiness > 25) {
+          hudLevels.happiness -= 25;
+          changed = true;
+        }
+        if (hudLevels.health > 25) {
+          hudLevels.health -= 25;
+          changed = true;
+        }
+
+        if (changed) {
+          localStorage.setItem('userHudLevels', JSON.stringify(hudLevels));
+          updateAllHudsVisuals();
+        }
+      }, 60000);
+    }
+
+    function applyAvatarSleepSprite(sleeping) {
+      const avatarImg = document.getElementById('avatar-img');
+      if (!avatarImg) return;
+      avatarImg.src = sleeping ? bedroomAssets.avatarSleeping : bedroomAssets.avatarAwake;
+    }
+
+    function syncSleepVisuals() {
+      const viewport = document.getElementById('dormitorio-viewport');
+      const avatarEl = document.getElementById('avatar-player');
+      const sleepSlot = document.getElementById('sleep-slot');
+      const wakeSlot = document.getElementById('wake-slot');
+      const btnSleep = document.getElementById('btn-sleep');
+      const btnWake = document.getElementById('btn-wake');
+
+      if (viewport) viewport.classList.toggle('is-sleeping', isSleeping);
+      if (avatarEl) {
+        avatarEl.classList.toggle('is-sleeping', isSleeping);
+        avatarEl.classList.toggle('is-idle', !isSleeping);
+      }
+
+      if (sleepSlot) sleepSlot.classList.toggle('is-hidden', isSleeping);
+      if (wakeSlot) wakeSlot.classList.toggle('is-hidden', !isSleeping);
+
+      if (btnSleep) btnSleep.setAttribute('aria-pressed', String(isSleeping));
+      if (btnWake) btnWake.setAttribute('aria-pressed', String(!isSleeping));
+
+      applyAvatarSleepSprite(isSleeping);
+    }
+
+    // 4A. Acción del botón DORMIR
+    function startSleeping(event) {
+      if (isSleeping) return;
+      isSleeping = true;
+      syncSleepVisuals();
+      recoverEnergyStep();
+      triggerAvatarReaction(event);
+    }
+
+    // 4B. Acción del botón DESPERTAR
+    function wakeUpPet(event) {
+      if (!isSleeping) return;
+      isSleeping = false;
+      if (sleepRecoveryTimer) {
+        clearInterval(sleepRecoveryTimer);
+        sleepRecoveryTimer = null;
+      }
+      syncSleepVisuals();
+      triggerAvatarReaction(event);
+    }
+
+    function recoverEnergyStep() {
+      if (hudLevels.energy < 100) {
+        hudLevels.energy = Math.min(100, hudLevels.energy + 25);
+        localStorage.setItem('userHudLevels', JSON.stringify(hudLevels));
+        bumpHud('energy', hudLevels.energy);
+      }
+    }
+
+    function triggerAvatarReaction(event) {
+      const viewport = document.getElementById('dormitorio-viewport');
+      const avatarEl = document.getElementById('avatar-player');
+      const vpRect = viewport.getBoundingClientRect();
+      const avRect = avatarEl.getBoundingClientRect();
+
+      const x = (event && event.clientX ? event.clientX : avRect.left + avRect.width / 2) - vpRect.left;
+      const y = (event && event.clientY ? event.clientY : avRect.top + avRect.height / 2) - vpRect.top;
+
+      spawnParticles(x, y, isSleeping ? ['💤', '✨', '⭐'] : ['✨', '⭐', '🌟']);
+    }
+
+    function spawnParticles(x, y, symbols = ['✨', '⭐', '🌟']) {
+      const viewport = document.getElementById('dormitorio-viewport');
+      if (!viewport) return;
+
+      for (let i = 0; i < 5; i++) {
+        const particle = document.createElement('div');
+        particle.classList.add('floating-particle');
+        particle.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+        particle.style.left = `${x + (Math.random() * 50 - 25)}px`;
+        particle.style.top = `${y + (Math.random() * 25 - 12)}px`;
+        particle.style.fontSize = `${Math.floor(Math.random() * 8 + 16)}px`;
+        particle.style.animationDuration = `${0.6 + Math.random() * 0.35}s`;
+
+        viewport.appendChild(particle);
+
+        setTimeout(() => {
+          particle.remove();
+        }, 850);
+      }
+    }
+
+    // 5. Control del despliegue de los 8 docks mediante Gesto (Swipe vertical) o Tap
+    function initDockGesture() {
+      const nav = document.getElementById('action-nav');
+      const handle = document.getElementById('dock-gesture-handle');
+      if (!nav) return;
+
+      let startY = 0;
+      let isDragging = false;
+
+      function setExpanded(expand) {
+        nav.classList.toggle('is-expanded', expand);
+        nav.classList.toggle('is-collapsed', !expand);
+        if (handle) {
+          handle.setAttribute('aria-expanded', String(expand));
+        }
+      }
+
+      window.toggleExtraDocks = function () {
+        setExpanded(!nav.classList.contains('is-expanded'));
+      };
+
+      nav.addEventListener('touchstart', (e) => {
+        if (!e.touches || e.touches.length === 0) return;
+        startY = e.touches[0].clientY;
+        isDragging = true;
+      }, { passive: true });
+
+      nav.addEventListener('touchend', (e) => {
+        if (!isDragging || !e.changedTouches || e.changedTouches.length === 0) return;
+        const endY = e.changedTouches[0].clientY;
+        const deltaY = startY - endY;
+        isDragging = false;
+
+        if (deltaY > 24) {
+          setExpanded(true);
+        } else if (deltaY < -24) {
+          setExpanded(false);
+        }
+      }, { passive: true });
+
+      nav.addEventListener('mousedown', (e) => {
+        startY = e.clientY;
+        isDragging = true;
+      });
+
+      window.addEventListener('mouseup', (e) => {
+        if (!isDragging) return;
+        const deltaY = startY - e.clientY;
+        isDragging = false;
+
+        if (deltaY > 28) {
+          setExpanded(true);
+        } else if (deltaY < -28) {
+          setExpanded(false);
+        }
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,1660 @@
+/* ========================================================== */
+/* ESTILOS GENERALES Y CONFIGURACIÓN BASE                     */
+/* ========================================================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: #050508;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+/* Contenedor principal exacto: 390 x 844 */
+.game-viewport {
+  position: relative;
+  width: 390px;
+  height: 844px;
+  background-color: #111;
+  border: 4px solid #3d2817;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+}
+
+/* Fondo de pantalla común */
+.background-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.bg-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* HUDs superiores (Contenedor de 190 x 120) */
+.status-bars {
+  position: absolute;
+  top: 25px;
+  left: 20px;
+  width: 190px;
+  height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  z-index: 3;
+}
+
+.hud-container {
+  width: 100%;
+  height: 32px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.hud-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+/* ========================================================== */
+/* BARRA DE NAVEGACIÓN INFERIOR / DOCKS DESPLEGABLES (8 TOTAL) */
+/* ========================================================== */
+.action-nav {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 20px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  z-index: 20;
+  touch-action: none; /* Permite detectar el swipe vertical sin scroll del navegador */
+}
+
+/* Pestaña / barra indicadora superior para deslizar o tocar */
+.dock-gesture-handle {
+  background: rgba(28, 15, 7, 0.82);
+  border: 2px solid #e7b55a;
+  border-radius: 6px;
+  padding: 4px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.dock-gesture-handle:hover {
+  background: rgba(54, 29, 13, 0.95);
+}
+
+.dock-gesture-handle:active {
+  transform: scale(0.95);
+}
+
+.gesture-bar {
+  width: 26px;
+  height: 3px;
+  background-color: #ffe39f;
+  border-radius: 2px;
+  display: block;
+  transition: transform 0.28s ease;
+}
+
+.action-nav.is-expanded .gesture-bar {
+  transform: scaleX(1.25);
+}
+
+/* Contenedor que recorta a 1 fila (4 docks) o expande a 2 filas (8 docks) */
+.docks-stack {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 82px; /* Altura de la primera fila de docks */
+  overflow: hidden;
+  transition: max-height 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.action-nav.is-expanded .docks-stack {
+  max-height: 180px; /* Altura suficiente para ambas filas */
+}
+
+.docks-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s ease;
+}
+
+/* Segunda fila oculta abajo y desplazada hacia arriba al expandir */
+.docks-row-secondary {
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+.action-nav.is-expanded .docks-row-secondary {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Botones de docks: ajustados para que 4 entren cómodos en 390px */
+.nav-btn {
+  width: 78px;
+  height: 76px;
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.12s ease, filter 0.15s ease;
+}
+
+.nav-btn:hover {
+  transform: scale(1.06);
+  filter: brightness(1.08);
+}
+
+.nav-btn:active {
+  transform: scale(0.94);
+}
+
+.nav-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+
+/* ========================================================== */
+/* SECCIÓN 1: PANTALLA HOME                                    */
+/* ========================================================== */
+
+/* Zona de la mascota (Centro en Home) */
+.pet-zone {
+  position: absolute;
+  bottom: 230px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+}
+
+/* Avatar de Aetheria (Medida exacta: 212 x 212) con animación lateral */
+.character-container {
+  position: relative;
+  z-index: 2;
+  animation: sideToSideSway 6s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+.avatar-img {
+  width: 212px;
+  height: 212px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+/* Animación de balanceo lateral suave */
+@keyframes sideToSideSway {
+  0%, 100% {
+    transform: translateX(0) rotate(0deg);
+  }
+  25% {
+    transform: translateX(-1.5px) rotate(-0.8deg);
+  }
+  75% {
+    transform: translateX(1.5px) rotate(0.8deg);
+  }
+}
+
+/* ========================================================== */
+/* SECCIÓN 2: PANTALLA DE ALQUIMIA Y SECUENCIA                 */
+/* ========================================================== */
+
+/* Ingredientes / Alimentos superiores (Medida: 60 x 60) */
+.ingredients-zone {
+  position: absolute;
+  top: 230px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 45px;
+  z-index: 3;
+}
+
+.ingredient-item {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  transform-origin: bottom center; /* Para que el balanceo se sienta natural desde la base */
+}
+
+/* Animación de lado al pasar el mouse (Hover) */
+.ingredient-item:hover {
+  animation: ingredientHoverSway 3s ease-in-out infinite;
+}
+
+/* Fotogramas del movimiento lento de lado a lado para los ingredientes */
+@keyframes ingredientHoverSway {
+  0%, 100% {
+    transform: translateX(0) rotate(0deg) scale(1.05);
+  }
+  25% {
+    transform: translateX(-3px) rotate(-3deg) scale(1.05);
+  }
+  75% {
+    transform: translateX(3px) rotate(3deg) scale(1.05);
+  }
+}
+
+/* Zona central de Alquimia (Olla + Mascota) */
+.alchemy-center-zone {
+  position: absolute;
+  bottom: 140px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+}
+
+/* Avatar adaptado para asomarse por detrás de la olla en Alquimia */
+.alchemy-avatar {
+  margin-bottom: -45px; 
+}
+
+/* Olla / Caldero de Alquimia (Medida exacta: 200 x 200) */
+.cauldron-container {
+  width: 200px;
+  height: 200px;
+  position: relative;
+  z-index: 3;
+}
+
+.cauldron-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+
+/* ========================================================== */
+/* ESTILOS PARA LA SECUENCIA DE ALQUIMIA (Fase 2)             */
+/* ========================================================== */
+
+/* Vista de secuencia con fondo oscurecido sutilmente */
+#view-sequence {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(5, 5, 8, 0.55);
+  z-index: 50;
+  display: none;
+}
+
+/* Ingrediente flotando intacto arriba en la secuencia */
+.sequence-floating-ingredient {
+  position: absolute;
+  top: 220px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  z-index: 55;
+  animation: gentleFloat 2s ease-in-out infinite alternate;
+}
+
+@keyframes gentleFloat {
+  0% { transform: translateX(-50%) translateY(0); }
+  100% { transform: translateX(-50%) translateY(-5px); }
+}
+
+/* Contenedor del Botón de Preparar / Beber */
+.sequence-action-container {
+  position: absolute;
+  bottom: 185px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+}
+
+.action-game-btn {
+  background-color: #3d2817;
+  color: #ffd700;
+  border: 3px solid #ffd700;
+  padding: 8px 20px;
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: bold;
+  font-size: 13px;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+  transition: transform 0.1s ease, background-color 0.2s;
+}
+
+.action-game-btn:hover {
+  background-color: #573a21;
+  transform: scale(1.05);
+}
+
+/* Humo / Líquido dinámico del caldero (Verde inicial que cambia a rojo) */
+.cauldron-smoke-liquid {
+  position: absolute;
+  top: 35px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 110px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #00ff66; /* Humo verde inicial */
+  box-shadow: 0 0 20px #00ff66;
+  opacity: 0.85;
+  z-index: -1;
+  transition: background-color 0.6s ease, box-shadow 0.6s ease;
+}
+
+.cauldron-smoke-liquid.turned-red {
+  background-color: #ff3333;
+  box-shadow: 0 0 25px #ff3333;
+}
+/* ========================================================== */
+/* SECCIÓN 3: MINI JUEGO - ATRAPA ESENCIAS                    */
+/* ========================================================== */
+
+.minigame-screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Animación de balanceo lateral suave */
+@keyframes sideToSideSway {
+  0%, 100% {
+    transform: translateX(0) rotate(0deg);
+  }
+  25% {
+    transform: translateX(-1.5px) rotate(-0.8deg);
+  }
+  75% {
+    transform: translateX(1.5px) rotate(0.8deg);
+  }
+}
+
+/* Animación de pulso / rebote para los HUDs */
+@keyframes hudPulse {
+  0% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.15); filter: drop-shadow(0 0 12px #ffd700); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+.hud-animate {
+  animation: hudPulse 0.4s ease-in-out;
+}
+
+/* Avatar optimizado con GPU */
+#avatar-player {
+  position: absolute;
+  bottom: 245px;
+  left: 0;
+  width: 212px;
+  height: 212px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  will-change: transform;
+}
+
+.avatar-game-img {
+  width: 212px;
+  height: 212px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  animation: sideToSideSway 2s ease-in-out infinite;
+}
+
+/* Esferas de luz cayendo */
+.falling-orb {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  z-index: 8;
+  animation: orbGlow 1s ease-in-out infinite alternate;
+}
+
+@keyframes orbGlow {
+  0% { filter: drop-shadow(0 0 4px #fff); transform: scale(1); }
+  100% { filter: drop-shadow(0 0 12px #00ffcc); transform: scale(1.1); }
+}
+
+/* Controles de flechas inferiores (por encima de los docks desplegados) */
+.arrow-controls {
+  position: absolute;
+  bottom: 185px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  padding: 0 70px;
+  z-index: 20;
+}
+
+.arrow-btn-img {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  cursor: pointer;
+  transition: transform 0.1s ease, filter 0.1s;
+}
+
+.arrow-btn-img:active {
+  transform: scale(0.90);
+  filter: brightness(0.8);
+}
+
+/* ========================================================== */
+/* DOCKS DESPLEGABLES (8 EN TOTAL) EN MINIJUEGO               */
+/* ========================================================== */
+.minigame-screen ~ .action-nav,
+.game-viewport .action-nav {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 20px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  z-index: 25;
+  touch-action: none;
+}
+
+.dock-gesture-handle {
+  background: rgba(28, 15, 7, 0.82);
+  border: 2px solid #e7b55a;
+  border-radius: 6px;
+  padding: 4px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.dock-gesture-handle:hover {
+  background: rgba(54, 29, 13, 0.95);
+}
+
+.dock-gesture-handle:active {
+  transform: scale(0.95);
+}
+
+.gesture-bar {
+  width: 26px;
+  height: 3px;
+  background-color: #ffe39f;
+  border-radius: 2px;
+  display: block;
+  transition: transform 0.28s ease;
+}
+
+.action-nav.is-expanded .gesture-bar {
+  transform: scaleX(1.25);
+}
+
+.docks-stack {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 82px;
+  overflow: hidden;
+  transition: max-height 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.action-nav.is-expanded .docks-stack {
+  max-height: 180px;
+}
+
+.docks-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s ease;
+}
+
+.docks-row-secondary {
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+.action-nav.is-expanded .docks-row-secondary {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.nav-btn {
+  width: 78px;
+  height: 76px;
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.12s ease, filter 0.15s ease;
+}
+
+.nav-btn:hover {
+  transform: scale(1.06);
+  filter: brightness(1.08);
+}
+
+.nav-btn:active {
+  transform: scale(0.94);
+}
+
+.nav-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+/* ========================================================== */
+/* SECCIÓN 4: COCINA - LUGAR DE COMER                         */
+/* ========================================================== */
+
+.kitchen-items-container {
+  position: absolute;
+  top: 265px; /* Estante bajo la ventana */
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  width: 249px;
+  height: 71px;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+/* EFECTO Y ANIMACIÓN AL SELECCIONAR UN ALIMENTO */
+.food-btn {
+  width: 71px;
+  height: 71px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 12px;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.2s ease, box-shadow 0.2s ease;
+}
+
+.food-btn:hover, .food-btn:focus {
+  transform: scale(1.15); 
+  filter: brightness(1.25); 
+  box-shadow: 0 0 15px rgba(255, 230, 100, 0.8); 
+}
+
+.food-btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 0 25px rgba(255, 255, 255, 1);
+}
+
+.food-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  transition: transform 0.2s ease;
+}
+
+.food-btn:hover .food-icon {
+  transform: rotate(-3deg) scale(1.05);
+}
+
+/* Zona exclusiva de la mascota en la COCINA */
+.kitchen-pet-zone {
+  position: absolute;
+  bottom: 0px;
+  left: 72%;
+  transform: translateX(-50%);
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  z-index: 5;
+}
+
+.character-container {
+  width: 212px;
+  height: 212px;
+}
+
+.avatar-img {
+  width: 212px;
+  height: 212px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+/* ========================================================== */
+/* DOCKS DESPLEGABLES (8 EN TOTAL) EN COCINA                  */
+/* ========================================================== */
+.action-nav {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 20px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  z-index: 25;
+  touch-action: none;
+}
+
+.dock-gesture-handle {
+  background: rgba(28, 15, 7, 0.82);
+  border: 2px solid #e7b55a;
+  border-radius: 6px;
+  padding: 4px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.dock-gesture-handle:hover {
+  background: rgba(54, 29, 13, 0.95);
+}
+
+.dock-gesture-handle:active {
+  transform: scale(0.95);
+}
+
+.gesture-bar {
+  width: 26px;
+  height: 3px;
+  background-color: #ffe39f;
+  border-radius: 2px;
+  display: block;
+  transition: transform 0.28s ease;
+}
+
+.action-nav.is-expanded .gesture-bar {
+  transform: scaleX(1.25);
+}
+
+.docks-stack {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 82px;
+  overflow: hidden;
+  transition: max-height 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.action-nav.is-expanded .docks-stack {
+  max-height: 180px;
+}
+
+.docks-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s ease;
+}
+
+.docks-row-secondary {
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+.action-nav.is-expanded .docks-row-secondary {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.nav-btn {
+  width: 78px;
+  height: 76px;
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.12s ease, filter 0.15s ease;
+}
+
+.nav-btn:hover {
+  transform: scale(1.06);
+  filter: brightness(1.08);
+}
+
+.nav-btn:active {
+  transform: scale(0.94);
+}
+
+.nav-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+/* ANIMACIÓN DE LOS HUDS */
+@keyframes hudPop {
+  0% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.15); filter: brightness(1.3); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+.hud-animate {
+  animation: hudPop 0.3s ease-in-out;
+}
+
+/* ANIMACIÓN DE COMIDA VOLADORA */
+@keyframes flyToPet {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) scale(0.4) rotate(360deg);
+    opacity: 0.2;
+  }
+}
+
+.flying-food {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 100;
+  animation: flyToPet 0.45s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* ANIMACIÓN DE PARTÍCULAS DORADAS */
+@keyframes floatUp {
+  0% {
+    transform: translateY(0) scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-90px) scale(1.3);
+    opacity: 0;
+  }
+}
+
+.floating-particle {
+  position: absolute;
+  pointer-events: none;
+  z-index: 101;
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.9), 0 0 20px rgba(255, 200, 50, 0.5);
+  animation: floatUp 0.8s ease-out forwards;
+}
+/* ========================================================== */
+/* SECCIÓN 5: DORMITORIO                                      */
+/* ========================================================== */
+
+/* Nitidez obligatoria para Pixel Art en todo el dormitorio */
+#dormitorio-viewport,
+#dormitorio-viewport img {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Oscurecimiento profundo cuando el avatar duerme */
+#dormitorio-viewport .sleep-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 8, 20, 0);
+  pointer-events: none;
+  z-index: 12; /* Por encima del fondo y del avatar durmiendo, pero DEBAJO de los botones */
+  transition: background-color 0.35s ease;
+}
+
+#dormitorio-viewport.is-sleeping .sleep-overlay {
+  background: rgba(5, 8, 20, 0.82);
+}
+
+/* Zona interactiva sobre la cama: espacios para Dormir y Despertar */
+#dormitorio-viewport .bedroom-sleep-zone {
+  position: absolute;
+  left: 6%;
+  top: 45%;
+  width: 48%;
+  height: 18%;
+  z-index: 20; /* Por encima de .sleep-overlay para que ambos botones queden iluminados */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+#dormitorio-viewport .sleep-action-slot,
+#dormitorio-viewport .wake-action-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#dormitorio-viewport .sleep-action-slot.is-hidden,
+#dormitorio-viewport .wake-action-slot.is-hidden {
+  display: none;
+}
+
+/* Botones de Dormir y Despertar con imagen desde assets */
+#dormitorio-viewport .sleep-btn,
+#dormitorio-viewport .wake-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.14s ease, filter 0.15s ease;
+}
+
+#dormitorio-viewport .sleep-btn:hover,
+#dormitorio-viewport .wake-btn:hover {
+  transform: scale(1.05);
+  filter: brightness(1.12);
+}
+
+#dormitorio-viewport .sleep-btn:active,
+#dormitorio-viewport .wake-btn:active {
+  transform: scale(0.94);
+}
+
+#dormitorio-viewport .sleep-btn-img,
+#dormitorio-viewport .wake-btn-img {
+  width: 112px;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.88));
+}
+
+/* Zona central del avatar solo en dormitorio */
+#dormitorio-viewport .bedroom-pet-zone {
+  position: absolute;
+  left: 40%;
+  bottom: -80px;
+  transform: translateX(-50%);
+  z-index: 7;
+  pointer-events: none;
+  transition: left 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              bottom 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Posición del avatar durmiendo sobre la cama, DEBAJO de .sleep-overlay (z-index: 12) */
+#dormitorio-viewport.is-sleeping .bedroom-pet-zone {
+  left: 10%;
+  bottom: -45px;
+  z-index: 7;
+  transform: none;
+  transition: none !important;
+}
+
+#dormitorio-viewport .character-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#dormitorio-viewport .avatar-img {
+  width: 212px;
+  height: auto;
+  display: block;
+  transition: width 0.35s ease, transform 0.35s ease;
+}
+
+#dormitorio-viewport.is-sleeping .avatar-img {
+  width: 300px;
+}
+
+/* Animación suave del avatar despierto solo en dormitorio */
+#dormitorio-viewport:not(.is-sleeping) .character-container.is-idle .avatar-img {
+  animation: sideToSideSway 2.4s ease-in-out infinite;
+}
+
+/* Sin animación ni transición cuando duerme */
+#dormitorio-viewport.is-sleeping .bedroom-pet-zone,
+#dormitorio-viewport.is-sleeping .character-container,
+#dormitorio-viewport.is-sleeping .character-container.is-sleeping .avatar-img,
+#dormitorio-viewport.is-sleeping #avatar-img {
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
+}
+
+/* ========================================================== */
+/* DOCKS DESPLEGABLES (8 EN TOTAL) EN DORMITORIO              */
+/* ========================================================== */
+#dormitorio-viewport .action-nav {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 20px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  z-index: 30;
+  touch-action: none;
+}
+
+#dormitorio-viewport .dock-gesture-handle {
+  background: rgba(28, 15, 7, 0.92);
+  border: 2px solid #e7b55a;
+  border-radius: 6px;
+  padding: 4px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+#dormitorio-viewport .dock-gesture-handle:hover {
+  background: rgba(54, 29, 13, 0.98);
+}
+
+#dormitorio-viewport .dock-gesture-handle:active {
+  transform: scale(0.95);
+}
+
+#dormitorio-viewport .gesture-bar {
+  width: 26px;
+  height: 3px;
+  background-color: #ffe39f;
+  border-radius: 2px;
+  display: block;
+  transition: transform 0.28s ease;
+}
+
+#dormitorio-viewport .action-nav.is-expanded .gesture-bar {
+  transform: scaleX(1.25);
+}
+
+#dormitorio-viewport .docks-stack {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 82px;
+  overflow: hidden;
+  transition: max-height 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+#dormitorio-viewport .action-nav.is-expanded .docks-stack {
+  max-height: 180px;
+}
+
+#dormitorio-viewport .docks-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s ease;
+}
+
+#dormitorio-viewport .docks-row-secondary {
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+#dormitorio-viewport .action-nav.is-expanded .docks-row-secondary {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#dormitorio-viewport .nav-btn {
+  width: 78px;
+  height: 76px;
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  text-decoration: none;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.85));
+  transition: transform 0.12s ease, filter 0.15s ease;
+}
+
+#dormitorio-viewport .nav-btn:hover {
+  transform: scale(1.06);
+  filter: brightness(1.08) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.9));
+}
+
+#dormitorio-viewport .nav-btn:active {
+  transform: scale(0.94);
+}
+
+#dormitorio-viewport .nav-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+/* Rebote al actualizar HUD */
+#dormitorio-viewport .hud-animate {
+  animation: hudPop 0.32s ease;
+}
+
+@keyframes hudPop {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Partículas flotantes por encima del oscurecimiento */
+#dormitorio-viewport .floating-particle {
+  position: absolute;
+  z-index: 25;
+  pointer-events: none;
+  animation: floatUpFade 0.8s ease-out forwards;
+}
+
+@keyframes floatUpFade {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(0.9);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-42px) scale(1.25);
+  }
+}
+
+/* Animación de balanceo lateral suave */
+@keyframes sideToSideSway {
+  0%, 100% {
+    transform: translateX(0) rotate(0deg);
+  }
+  25% {
+    transform: translateX(-1.5px) rotate(-0.8deg);
+  }
+  75% {
+    transform: translateX(1.5px) rotate(0.8deg);
+  }
+}
+/* ========================================================== */
+/* SECCIÓN 6: DESPENSA                                        */
+/* ========================================================== */
+
+#despensa-viewport,
+#despensa-viewport img {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Contenedor de la barra de alimento mostrada al tocar un cofre */
+#despensa-viewport .food-status-panel {
+  position: absolute;
+  top: 238px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 22;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(14, 16, 28, 0.88);
+  border: 2px solid #f0be5b;
+  border-radius: 6px;
+  padding: 6px 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.85);
+  opacity: 1;
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+#despensa-viewport .food-status-panel.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#despensa-viewport .food-bar-sprite {
+  width: 245px;
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+#despensa-viewport .food-bar-sprite.is-hidden,
+#despensa-viewport .food-fallback-row.is-hidden {
+  display: none;
+}
+
+#despensa-viewport .food-fallback-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#despensa-viewport .food-status-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+#despensa-viewport .food-status-title {
+  color: #fff3d1;
+  font-family: monospace, sans-serif;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+#despensa-viewport .food-meter-track {
+  width: 120px;
+  height: 14px;
+  background: #0b0d17;
+  border: 2px solid #f0be5b;
+  border-radius: 3px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+#despensa-viewport .food-meter-fill {
+  height: 100%;
+  width: 100%;
+  background-color: #f7c85c;
+  transition: width 0.3s ease;
+}
+
+#despensa-viewport .food-status-readout {
+  color: #ffe599;
+  font-family: monospace, sans-serif;
+  font-size: 12px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+@keyframes panelPop {
+  0% { transform: translateX(-50%) scale(0.92); }
+  55% { transform: translateX(-50%) scale(1.04); }
+  100% { transform: translateX(-50%) scale(1); }
+}
+
+#despensa-viewport .food-status-panel.is-popping {
+  animation: panelPop 0.26s ease;
+}
+
+/* Capa de cofres sobre los estantes */
+#despensa-viewport .pantry-chests-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+#despensa-viewport .chest-btn {
+  position: absolute;
+  pointer-events: auto;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.14s ease, filter 0.15s ease;
+}
+
+#despensa-viewport .chest-btn:hover {
+  transform: scale(1.07);
+  filter: brightness(1.12);
+}
+
+#despensa-viewport .chest-btn:active {
+  transform: scale(0.94);
+}
+
+#despensa-viewport .chest-img {
+  width: 115px;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.85));
+}
+
+/* Coordenadas de los cofres (2 manzana, 1 hoja, 1 agua) */
+#despensa-viewport .chest-slot-1 {
+  top: 170px;
+  left: 40%;
+}
+
+#despensa-viewport .chest-slot-2 {
+  top: 245px;
+  left: 24%;
+}
+
+#despensa-viewport .chest-slot-3 {
+  top: 340px;
+  left: 45%;
+}
+
+#despensa-viewport .chest-slot-4 {
+  top: 415px;
+  left: 24%;
+}
+
+@keyframes chestPop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.16) rotate(-3deg); }
+  75% { transform: scale(0.96) rotate(2deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+#despensa-viewport .chest-btn.is-popping {
+  animation: chestPop 0.32s ease;
+}
+
+/* Zona central del avatar en la despensa */
+#despensa-viewport .pantry-pet-zone {
+  position: absolute;
+  left: 23%;
+  bottom: -100px;
+  transform: translateX(-50%);
+  z-index: 7;
+  pointer-events: none;
+}
+
+#despensa-viewport .character-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#despensa-viewport .avatar-img {
+  width: 196px;
+  height: auto;
+  display: block;
+}
+
+#despensa-viewport .character-container.is-idle .avatar-img {
+  animation: sideToSideSway 2.4s ease-in-out infinite;
+}
+
+/* ========================================================== */
+/* SECCIÓN 7: COSECHA DE ALIMENTOS                            */
+/* ========================================================== */
+
+#cosecha-viewport,
+#cosecha-viewport img {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* OVERLAY OSCURO DURANTE LA COSECHA */
+#cosecha-viewport .harvest-dark-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  background: rgba(10, 12, 24, 0.65);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+#cosecha-viewport .harvest-dark-overlay.is-active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* BOTÓN EMERGENTE "COSECHAR" (ASSET DE IMAGEN) */
+#cosecha-viewport .harvest-action-btn {
+  position: absolute;
+  z-index: 26;
+  transform: translate(-50%, -100%);
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.85));
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+#cosecha-viewport .harvest-action-btn:hover {
+  transform: translate(-50%, -100%) scale(1.06);
+  filter: brightness(1.12) drop-shadow(0 5px 10px rgba(0, 0, 0, 0.9));
+}
+
+#cosecha-viewport .harvest-action-btn:active {
+  transform: translate(-50%, -100%) scale(0.95);
+}
+
+#cosecha-viewport .harvest-action-btn.is-hidden {
+  display: none;
+}
+
+#cosecha-viewport .harvest-btn-img {
+  width: 118px;
+  height: auto;
+  display: block;
+}
+
+/* PANEL Y BARRA DE PROGRESO DE COSECHA */
+#cosecha-viewport .harvest-progress-panel {
+  position: absolute;
+  top: 260px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 28;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+#cosecha-viewport .harvest-progress-panel.is-hidden {
+  display: none;
+}
+
+#cosecha-viewport .harvest-bar-sprite {
+  width: 250px;
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* CAPA Y POSICIONAMIENTO DE LOS 10 CULTIVOS */
+#cosecha-viewport .crop-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+#cosecha-viewport .crop-btn {
+  position: absolute;
+  pointer-events: auto;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+
+#cosecha-viewport .crop-btn.is-harvested {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#cosecha-viewport .crop-img {
+  width: 70px;
+  height: auto;
+  display: block;
+  transform-origin: 50% 90%;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.75));
+  animation: gentleCropFloat 3.8s ease-in-out infinite;
+  transition: filter 0.16s ease;
+}
+
+#cosecha-viewport .crop-btn:hover .crop-img {
+  filter: brightness(1.12) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.85));
+}
+
+/* Movimiento lateral de lado a lado tipo ráfaga de viento */
+@keyframes gentleCropFloat {
+  0%, 100% {
+    transform: translateX(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateX(4px) rotate(3.2deg);
+  }
+  50% {
+    transform: translateX(1px) rotate(0.6deg);
+  }
+  75% {
+    transform: translateX(-4px) rotate(-3.2deg);
+  }
+}
+
+/* Desfase de animación entre cultivos para que se vean orgánicos */
+#cosecha-viewport .crop-slot-1 .crop-img  { animation-delay: 0s; }
+#cosecha-viewport .crop-slot-2 .crop-img  { animation-delay: 0.4s; }
+#cosecha-viewport .crop-slot-3 .crop-img  { animation-delay: 0.8s; }
+#cosecha-viewport .crop-slot-4 .crop-img  { animation-delay: 1.2s; }
+#cosecha-viewport .crop-slot-5 .crop-img  { animation-delay: 1.6s; }
+#cosecha-viewport .crop-slot-6 .crop-img  { animation-delay: 2.0s; }
+#cosecha-viewport .crop-slot-7 .crop-img  { animation-delay: 2.4s; }
+#cosecha-viewport .crop-slot-8 .crop-img  { animation-delay: 2.8s; }
+#cosecha-viewport .crop-slot-9 .crop-img  { animation-delay: 3.1s; }
+#cosecha-viewport .crop-slot-10 .crop-img { animation-delay: 3.4s; }
+
+/* Coordenadas de los cultivos en el huerto */
+#cosecha-viewport .crop-slot-1  { top: 460px; left: 15%; }
+#cosecha-viewport .crop-slot-2  { top: 450px; left: 68%; }
+#cosecha-viewport .crop-slot-3  { top: 460px; left: 32%; }
+#cosecha-viewport .crop-slot-4  { top: 535px; left: 80%; }
+#cosecha-viewport .crop-slot-5  { top: 545px; left: 0%;  }
+#cosecha-viewport .crop-slot-6  { top: 400px; left: 50%; }
+#cosecha-viewport .crop-slot-7  { top: 450px; left: 50%; }
+#cosecha-viewport .crop-slot-8  { top: 625px; left: -10%;}
+#cosecha-viewport .crop-slot-9  { top: 410px; left: 33%; }
+#cosecha-viewport .crop-slot-10 { top: 620px; left: 93%; }
+
+/* AVATAR EN HUERTO (POR DELANTE DE LOS CULTIVOS) */
+#cosecha-viewport .crop-pet-zone {
+  position: absolute;
+  left: 52%;
+  bottom: 150px;
+  transform: translateX(-50%);
+  z-index: 20;
+  pointer-events: none;
+}
+
+#cosecha-viewport .avatar-img {
+  width: 212px;
+  height: auto;
+  display: block;
+}
+
+/* ========================================================== */
+/* SECCIÓN 8: COSECHA DE AGUA                                 */
+/* ========================================================== */
+
+#agua-viewport,
+#agua-viewport img {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* FUENTE MÍSTICA ANIMADA (SIEMPRE PRESENTE) */
+#agua-viewport .fountain-layer {
+  position: absolute;
+  left: 43%;
+  top: 310px;
+  transform: translateX(-50%);
+  z-index: 8;
+  pointer-events: none;
+}
+
+#agua-viewport .fountain-img {
+  width: 270px;
+  max-width: 270%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 0 10px rgba(45, 226, 255, 0.35));
+}
+
+/* EFECTO MÍSTICO DE ONDA / DESTELLO SOBRE EL AGUA */
+#agua-viewport .fountain-mystic-glow {
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(95, 245, 255, 0.28) 0%,
+    rgba(30, 175, 255, 0.12) 55%,
+    transparent 75%
+  );
+  mix-blend-mode: screen;
+  animation: waterMysticPulse 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes waterMysticPulse {
+  0%, 100% {
+    opacity: 0.45;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.04);
+  }
+}
+
+/* OVERLAY OSCURO DURANTE LA EXTRACCIÓN */
+#agua-viewport .water-dark-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  background: rgba(10, 12, 24, 0.65);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+#agua-viewport .water-dark-overlay.is-active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* BOTÓN "COMENZAR" */
+#agua-viewport .water-start-btn {
+  position: absolute;
+  top: 270px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 22;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.85));
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+#agua-viewport .water-start-btn:hover {
+  transform: translateX(-50%) scale(1.06);
+  filter: brightness(1.12) drop-shadow(0 5px 10px rgba(0, 0, 0, 0.9));
+}
+
+#agua-viewport .water-start-btn:active {
+  transform: translateX(-50%) scale(0.95);
+}
+
+#agua-viewport .water-start-btn.is-hidden {
+  display: none;
+}
+
+#agua-viewport .water-start-img {
+  width: 130px;
+  height: auto;
+  display: block;
+}
+
+/* PANEL Y BARRA DE PROGRESO (0% A 100%) */
+#agua-viewport .water-progress-panel {
+  position: absolute;
+  top: 260px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 28;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+#agua-viewport .water-progress-panel.is-hidden {
+  display: none;
+}
+
+#agua-viewport .water-bar-sprite {
+  width: 250px;
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ZONA DEL AVATAR */
+#agua-viewport .water-pet-zone {
+  position: absolute;
+  left: 52%;
+  bottom: 135px;
+  transform: translateX(-50%);
+  z-index: 20;
+  pointer-events: none;
+}
+
+#agua-viewport .avatar-img {
+  width: 212px;
+  height: auto;
+  display: block;
+}

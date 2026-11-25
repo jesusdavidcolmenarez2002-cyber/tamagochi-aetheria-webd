@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aetheria - Cosecha</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+  <link rel="stylesheet" href="../css/cosecha.css" />
+</head>
+<body>
+
+  <main class="game-viewport" id="cosecha-viewport">
+
+    <!-- FONDO DEL HUERTO -->
+    <div class="background-container">
+      <img src="../assets/Diseño_Fondo_Cosecha.png" alt="Huerto de Cosecha" class="bg-image" id="bg-huerto" />
+    </div>
+
+    <!-- OVERLAY OSCURO QUE SE ACTIVA AL COSECHAR -->
+    <div class="harvest-dark-overlay" id="harvest-dark-overlay" aria-hidden="true"></div>
+
+    <!-- UI SUPERIOR: HUDS DE ESTADO -->
+    <div class="status-bars">
+      <div class="hud-container" id="hud-health">
+        <img src="../assets/Diseño_Huds_Salud 25.png" alt="HUD Vida" class="hud-img" id="img-hud-health" />
+      </div>
+      <div class="hud-container" id="hud-happiness">
+        <img src="../assets/Diseño_Huds_Felicidad 25.png" alt="HUD Felicidad" class="hud-img" id="img-hud-happiness" />
+      </div>
+      <div class="hud-container" id="hud-energy">
+        <img src="../assets/Diseño_Huds_Energia 25.png" alt="HUD Energía" class="hud-img" id="img-hud-energy" />
+      </div>
+    </div>
+
+    <!-- BOTÓN EMERGENTE "COSECHAR" (ASSET DE IMAGEN SOBRE EL ALIMENTO SELECCIONADO) -->
+    <button
+      type="button"
+      class="harvest-action-btn is-hidden"
+      id="harvest-action-btn"
+      onclick="startHarvestProcess()"
+      aria-label="Iniciar cosecha"
+    >
+      <img
+        src="../assets/Diseño_Boton_Cosechar.png"
+        alt="Cosechar"
+        class="harvest-btn-img"
+      />
+    </button>
+
+    <!-- BARRA DE PROCESO DE COSECHA CON ASSETS DE PORCENTAJE -->
+    <div class="harvest-progress-panel is-hidden" id="harvest-progress-panel">
+      <img
+        src="../assets/Diseño_Proceso de cosechar_0%.png"
+        alt="Progreso de Cosecha"
+        class="harvest-bar-sprite"
+        id="harvest-bar-sprite"
+      />
+    </div>
+
+    <!-- CAPA DE ALIMENTOS EN PANTALLA (10 CULTIVOS: 5 MANZANAS + 5 HOJAS) -->
+    <div class="crop-layer" id="crop-layer">
+      <!-- 1. Manzana -->
+      <button type="button" class="crop-btn crop-slot-1" data-id="1" data-type="manzana" onclick="selectCrop(1, event)">
+        <img src="../assets/Diseño_Cultivo_Manzana_1.png" alt="Manzana" class="crop-img" />
+      </button>
+
+      <!-- 2. Hoja -->
+      <button type="button" class="crop-btn crop-slot-2" data-id="2" data-type="hoja" onclick="selectCrop(2, event)">
+        <img src="../assets/Diseño_Cultivo_Hoja_1.png" alt="Hoja Mágica" class="crop-img" />
+      </button>
+
+      <!-- 3. Manzana -->
+      <button type="button" class="crop-btn crop-slot-3" data-id="3" data-type="manzana" onclick="selectCrop(3, event)">
+        <img src="../assets/Diseño_Cultivo_Manzana_2.png" alt="Manzana" class="crop-img" />
+      </button>
+
+      <!-- 4. Hoja -->
+      <button type="button" class="crop-btn crop-slot-4" data-id="4" data-type="hoja" onclick="selectCrop(4, event)">
+        <img src="../assets/Diseño_Cultivo_Hoja_2.png" alt="Hoja Mágica" class="crop-img" />
+      </button>
+
+      <!-- 5. Manzana -->
+      <button type="button" class="crop-btn crop-slot-5" data-id="5" data-type="manzana" onclick="selectCrop(5, event)">
+        <img src="../assets/Diseño_Cultivo_Manzana_3.png" alt="Manzana" class="crop-img" />
+      </button>
+
+      <!-- 6. Hoja -->
+      <button type="button" class="crop-btn crop-slot-6" data-id="6" data-type="hoja" onclick="selectCrop(6, event)">
+        <img src="../assets/Diseño_Cultivo_Hoja_3.png" alt="Hoja Mágica" class="crop-img" />
+      </button>
+
+      <!-- 7. Manzana -->
+      <button type="button" class="crop-btn crop-slot-7" data-id="7" data-type="manzana" onclick="selectCrop(7, event)">
+        <img src="../assets/Diseño_Cultivo_Hoja_1.png" alt="Manzana" class="crop-img" />
+      </button>
+
+      <!-- 8. Manzana extra (4ta manzana) -->
+      <button type="button" class="crop-btn crop-slot-8" data-id="8" data-type="manzana" onclick="selectCrop(8, event)">
+        <img src="../assets/Diseño_Cultivo_Manzana_2.png" alt="Manzana" class="crop-img" />
+      </button>
+
+      <!-- 9. Manzana extra (5ta manzana) -->
+      <button type="button" class="crop-btn crop-slot-9" data-id="9" data-type="manzana" onclick="selectCrop(9, event)">
+        <img src="../assets/Diseño_Cultivo_Manzana_3.png" alt="Manzana" class="crop-img" />
+      </button>
+
+      <!-- 10. Hoja extra (4ta/5ta hoja) -->
+      <button type="button" class="crop-btn crop-slot-10" data-id="10" data-type="hoja" onclick="selectCrop(10, event)">
+        <img src="../assets/Diseño_Cultivo_Hoja_1.png" alt="Hoja Mágica" class="crop-img" />
+      </button>
+    </div>
+
+    <!-- ZONA DEL AVATAR (POR ENCIMA DE LOS CULTIVOS) -->
+    <div class="crop-pet-zone">
+      <div class="character-container is-idle">
+        <img src="../assets/Diseño_Avatar_Front.png" alt="Aetheria" class="avatar-img" />
+      </div>
+    </div>
+
+    <!-- UI INFERIOR: DOCKS -->
+    <nav class="action-nav is-collapsed" id="action-nav">
+      <button type="button" class="dock-gesture-handle" onclick="toggleExtraDocks()">
+        <span class="gesture-bar"></span>
+      </button>
+      <div class="docks-stack">
+        <div class="docks-row docks-row-primary">
+          <a href="../index.html" class="nav-btn"><img src="../assets/Diseño_Docks_1.png" alt="Home" class="nav-icon" /></a>
+          <a href="Cocina.html" class="nav-btn active"><img src="../assets/Diseño_Docks_2.png" alt="Cosecha" class="nav-icon" /></a>
+          <a href="Alquimia.html" class="nav-btn"><img src="../assets/Diseño_Docks_3.png" alt="Alquimia" class="nav-icon" /></a>
+          <a href="Mini juego.html" class="nav-btn"><img src="../assets/Diseño_Docks_4.png" alt="Minijuego" class="nav-icon" /></a>
+        </div>
+        <div class="docks-row docks-row-secondary">
+          <a href="Dormitorio.html" class="nav-btn"><img src="../assets/Diseño_Docks_5.png" alt="Dormitorio" class="nav-icon" /></a>
+          <a href="Despensa.html" class="nav-btn"><img src="../assets/Diseño_Docks_6.png" alt="Despensa" class="nav-icon" /></a>
+          <a href="Santuario.html" class="nav-btn"><img src="../assets/Diseño_Docks_7.png" alt="Tienda" class="nav-icon" /></a>
+          <a href="Cosecha.html" class="nav-btn"><img src="../assets/Diseño_Docks_8.png" alt="Inventario" class="nav-icon" /></a>
+        </div>
+      </div>
+    </nav>
+
+  </main>
+
+  <script>
+    // ==========================================================
+    // ASSETS Y CONFIGURACIÓN DE BARRA DE COSECHA
+    // ==========================================================
+    const harvestBarSprites = {
+      0:   '../assets/Diseño_Proceso de cosechar_0%.png',
+      20:  '../assets/Diseño_Proceso de cosechar_20%.png',
+      40:  '../assets/Diseño_Proceso de cosechar_40%.png',
+      60:  '../assets/Diseño_Proceso de cosechar_60%.png',
+      80:  '../assets/Diseño_Proceso de cosechar_80%.png',
+      100: '../assets/Diseño_Proceso de cosechar_100%.png'
+    };
+
+    // Precargar todos los sprites de barra para evitar parpadeos o retrasos al iniciar
+    Object.values(harvestBarSprites).forEach((src) => {
+      const img = new Image();
+      img.src = src;
+    });
+
+    // Tiempo de rebrote/crecimiento (ej. 30 segundos)
+    const RESPAWN_TIME_MS = 30000;
+    // Unidades recibidas por cosecha
+    const HARVEST_YIELD = 5;
+    // Duración de cada escalón de barra (ms)
+    const STEP_DURATION_MS = 450;
+
+    let selectedCropId = null;
+    let selectedCropType = null;
+    let isHarvesting = false;
+    let harvestStepTimeout = null;
+
+    // Sincronizar stock con localStorage (mismo mecanismo usado en la Despensa)
+    function addHarvestToPantry(itemType, units = HARVEST_YIELD) {
+      const defaultStock = { manzana: 25, hoja: 25, agua: 25 };
+      const saved = localStorage.getItem('pantryStock');
+      let currentStock = saved ? JSON.parse(saved) : defaultStock;
+
+      const maxUnits = 25;
+      const current = Number(currentStock[itemType] || 0);
+      currentStock[itemType] = Math.min(maxUnits, current + units);
+
+      localStorage.setItem('pantryStock', JSON.stringify(currentStock));
+    }
+
+    // 1. Tocar alimento: posicionar botón "COSECHAR" justo sobre él
+    function selectCrop(cropId, event) {
+      if (isHarvesting) return;
+
+      const cropBtn = event.currentTarget;
+      if (cropBtn.classList.contains('is-harvested')) return;
+
+      selectedCropId = cropId;
+      selectedCropType = cropBtn.dataset.type;
+
+      const actionBtn = document.getElementById('harvest-action-btn');
+      const viewport = document.getElementById('cosecha-viewport');
+      const vpRect = viewport.getBoundingClientRect();
+      const cropRect = cropBtn.getBoundingClientRect();
+
+      const posX = cropRect.left + cropRect.width / 2 - vpRect.left;
+      const posY = cropRect.top - vpRect.top - 10;
+
+      actionBtn.style.left = `${posX}px`;
+      actionBtn.style.top = `${posY}px`;
+      actionBtn.classList.remove('is-hidden');
+    }
+
+    // 2. Iniciar Proceso de Cosecha (0% -> 20% -> 40% -> 60% -> 80% -> 100%)
+    function startHarvestProcess() {
+      if (!selectedCropId || isHarvesting) return;
+
+      isHarvesting = true;
+      const actionBtn = document.getElementById('harvest-action-btn');
+      const darkOverlay = document.getElementById('harvest-dark-overlay');
+      const progressPanel = document.getElementById('harvest-progress-panel');
+      const barSprite = document.getElementById('harvest-bar-sprite');
+
+      actionBtn.classList.add('is-hidden');
+      darkOverlay.classList.add('is-active');
+      progressPanel.classList.remove('is-hidden');
+
+      const steps = [0, 20, 40, 60, 80, 100];
+      barSprite.src = harvestBarSprites[steps[0]];
+
+      let stepIndex = 0;
+
+      function advanceStep() {
+        stepIndex++;
+        if (stepIndex < steps.length) {
+          const pct = steps[stepIndex];
+          barSprite.src = harvestBarSprites[pct];
+          harvestStepTimeout = setTimeout(advanceStep, STEP_DURATION_MS);
+        } else {
+          harvestStepTimeout = setTimeout(finishHarvestProcess, STEP_DURATION_MS);
+        }
+      }
+
+      harvestStepTimeout = setTimeout(advanceStep, STEP_DURATION_MS);
+    }
+
+    // 3. Culminación de Cosecha
+    function finishHarvestProcess() {
+      if (harvestStepTimeout) {
+        clearTimeout(harvestStepTimeout);
+        harvestStepTimeout = null;
+      }
+
+      const darkOverlay = document.getElementById('harvest-dark-overlay');
+      const progressPanel = document.getElementById('harvest-progress-panel');
+      const barSprite = document.getElementById('harvest-bar-sprite');
+
+      // Restablecer pantalla e interactividad
+      darkOverlay.classList.remove('is-active');
+      progressPanel.classList.add('is-hidden');
+      barSprite.src = harvestBarSprites[0];
+
+      // Ocultar el alimento cosechado
+      const targetCrop = document.querySelector(`.crop-btn[data-id="${selectedCropId}"]`);
+      if (targetCrop) {
+        targetCrop.classList.add('is-harvested');
+      }
+
+      // Sumar al stock persistente de Despensa
+      addHarvestToPantry(selectedCropType, HARVEST_YIELD);
+
+      // Programar rebrote tras X tiempo
+      const currentId = selectedCropId;
+      setTimeout(() => {
+        const cropToRespawn = document.querySelector(`.crop-btn[data-id="${currentId}"]`);
+        if (cropToRespawn) {
+          cropToRespawn.classList.remove('is-harvested');
+        }
+      }, RESPAWN_TIME_MS);
+
+      selectedCropId = null;
+      selectedCropType = null;
+      isHarvesting = false;
+    }
+
+    // Gesto dock
+    function toggleExtraDocks() {
+      const nav = document.getElementById('action-nav');
+      if (nav) nav.classList.toggle('is-expanded');
+    }
+  </script>
+</body>
+</html>

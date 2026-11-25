@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aetheria - Despensa</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+  <link rel="stylesheet" href="../css/despensa.css" />
+</head>
+<body>
+
+  <!-- Contenedor principal 390x844 -->
+  <main class="game-viewport" id="despensa-viewport">
+
+    <!-- FONDO Y ESCENARIO DE LA DESPENSA -->
+    <div class="background-container">
+      <img src="../assets/diseño_fondo_almacen.png" alt="Despensa de Aetheria" class="bg-image" id="bg-despensa" />
+    </div>
+
+    <!-- UI SUPERIOR: HUDS DE ESTADO CON SPRITES -->
+    <div class="status-bars">
+      <!-- HUD 1: Vida -->
+      <div class="hud-container" id="hud-health">
+        <img src="../assets/Diseño_Huds_Salud 25.png" alt="HUD Vida" class="hud-img" id="img-hud-health" />
+      </div>
+      <!-- HUD 2: Felicidad -->
+      <div class="hud-container" id="hud-happiness">
+        <img src="../assets/Diseño_Huds_Felicidad 25.png" alt="HUD Felicidad" class="hud-img" id="img-hud-happiness" />
+      </div>
+      <!-- HUD 3: Energía -->
+      <div class="hud-container" id="hud-energy">
+        <img src="../assets/Diseño_Huds_Energia 25.png" alt="HUD Energía" class="hud-img" id="img-hud-energy" />
+      </div>
+    </div>
+
+    <!-- BARRA DE DATOS DE ALIMENTO (SE MUESTRA AL TOCAR UN COFRE) -->
+    <section
+      class="food-status-panel is-hidden"
+      id="food-status-panel"
+      aria-live="polite"
+      aria-label="Estado del alimento en despensa"
+    >
+      <!-- Asset directo de la barra según porcentaje (100%, 80%, 60%, 40%, 20%, 0%) -->
+      <img
+        src="../assets/Diseño_Proceso de despensa_Manzanas_100%.png"
+        alt="Barra de alimento"
+        class="food-bar-sprite"
+        id="food-bar-sprite"
+      />
+
+      <!-- Fallback con barra dinámica + texto si usas useBarSprite: false -->
+      <div class="food-fallback-row is-hidden" id="food-fallback-row">
+        <img src="../assets/Diseño_Proceso de despensa_Manzanas_100%.png" alt="" class="food-status-icon" id="food-status-icon" />
+        <span class="food-status-title" id="food-status-title">MANZANAS</span>
+        <div class="food-meter-track" id="food-meter-track">
+          <div class="food-meter-fill" id="food-meter-fill" style="width: 100%;"></div>
+        </div>
+        <span class="food-status-readout" id="food-status-readout">100% (25 UN.)</span>
+      </div>
+    </section>
+
+    <!-- COFRES INTERACTIVOS EN LOS ESTANTES -->
+    <div class="pantry-chests-layer" id="pantry-chests-layer">
+      <!-- Cofre 1: Manzana -->
+      <button
+        type="button"
+        class="chest-btn chest-slot-1"
+        id="chest-1"
+        onclick="openChest('manzana', event)"
+        aria-label="Ver barra de manzanas"
+      >
+        <img src="../assets/Diseño_Cofres de alimento_1.png" alt="Cofre de Manzana" class="chest-img" />
+      </button>
+
+      <!-- Cofre 2: Manzana -->
+      <button
+        type="button"
+        class="chest-btn chest-slot-2"
+        id="chest-2"
+        onclick="openChest('manzana', event)"
+        aria-label="Ver barra de manzanas"
+      >
+        <img src="../assets/Diseño_Cofres de alimento_2.png" alt="Cofre de Manzana" class="chest-img" />
+      </button>
+
+      <!-- Cofre 3: Hoja -->
+      <button
+        type="button"
+        class="chest-btn chest-slot-3"
+        id="chest-3"
+        onclick="openChest('hoja', event)"
+        aria-label="Ver barra de hojas"
+      >
+        <img src="../assets/Diseño_Cofres de alimento_1.png" alt="Cofre de Hoja" class="chest-img" />
+      </button>
+
+      <!-- Cofre 4: Agua -->
+      <button
+        type="button"
+        class="chest-btn chest-slot-4"
+        id="chest-4"
+        onclick="openChest('agua', event)"
+        aria-label="Ver barra de agua"
+      >
+        <img src="../assets/Diseño_Cofres de alimento_2.png" alt="Cofre de Agua" class="chest-img" />
+      </button>
+    </div>
+
+    <!-- ZONA CENTRAL: MASCOTA EN LA DESPENSA -->
+    <div class="pantry-pet-zone" id="pantry-pet-zone">
+      <div class="character-container is-idle" id="avatar-player">
+        <img src="../assets/Diseño_Avatar_Front.png" alt="Aetheria" class="avatar-img" id="avatar-img" />
+      </div>
+    </div>
+
+    <!-- UI INFERIOR: 4 DOCKS VISIBLES + 4 EXTRA AL DESLIZAR (8 EN TOTAL) -->
+    <nav class="action-nav is-collapsed" id="action-nav" aria-label="Navegación de docks">
+
+      <!-- Indicador / Pestaña táctil superior -->
+      <button
+        type="button"
+        class="dock-gesture-handle"
+        id="dock-gesture-handle"
+        onclick="toggleExtraDocks()"
+        aria-expanded="false"
+        aria-label="Desliza hacia arriba o toca para desplegar más docks"
+      >
+        <span class="gesture-bar"></span>
+      </button>
+
+      <!-- Apilamiento de 2 filas de 4 docks -->
+      <div class="docks-stack" id="docks-stack">
+
+        <!-- FILA 1 (Docks principales siempre visibles) -->
+        <div class="docks-row docks-row-primary">
+          <a href="../index.html" class="nav-btn" title="Home">
+            <img src="../assets/Diseño_Docks_1.png" alt="Home" class="nav-icon" />
+          </a>
+          <a href="Cocina.html" class="nav-btn" title="Minijuego">
+            <img src="../assets/Diseño_Docks_2.png" alt="Minijuego" class="nav-icon" />
+          </a>
+          <a href="Alquimia.html" class="nav-btn" title="Cocina">
+            <img src="../assets/Diseño_Docks_3.png" alt="Cocina" class="nav-icon" />
+          </a>
+          <a href="Mini juego.html" class="nav-btn" title="Alquimia">
+            <img src="../assets/Diseño_Docks_4.png" alt="Alquimia" class="nav-icon" />
+          </a>
+        </div>
+
+        <!-- FILA 2 (Docks extra que aparecen al hacer el gesto hacia arriba) -->
+        <div class="docks-row docks-row-secondary" id="extra-docks-row">
+          <a href="Dormitorio.html" class="nav-btn" title="Dormitorio">
+            <img src="../assets/Diseño_Docks_5.png" alt="Dormitorio" class="nav-icon" />
+          </a>
+          <a href="Despensa.html" class="nav-btn active" title="Despensa">
+            <img src="../assets/Diseño_Docks_6.png" alt="Despensa" class="nav-icon" />
+          </a>
+          <a href="Santuario.html" class="nav-btn" title="Tienda">
+            <img src="../assets/Diseño_Docks_7.png" alt="Tienda" class="nav-icon" />
+          </a>
+          <a href="Cosecha.html" class="nav-btn" title="Inventario">
+            <img src="../assets/Diseño_Docks_8.png" alt="Inventario" class="nav-icon" />
+          </a>
+        </div>
+
+      </div>
+    </nav>
+
+  </main>
+
+  <script>
+    // ==========================================================
+    // SECCIÓN DE ASSETS DE LA DESPENSA Y BARRAS POR PORCENTAJE
+    // Pon aquí los nombres exactos de tus archivos en ../assets/
+    // ==========================================================
+    const pantryAssets = {
+      background: '../assets/diseño_fondo_almacen.png',
+      avatar: '../assets/Diseño_Avatar_Front.png',
+      chestClosed1: '../assets/Diseño_Cofres de alimento_1.png',
+      chestClosed2: '../assets/Diseño_Cofres de alimento_2.png',
+
+      items: {
+        manzana: {
+          label: 'MANZANAS',
+          icon: '../assets/Diseño_Proceso de despensa_Manzanas_100%.png',
+          useBarSprite: true,
+          maxUnits: 25,
+          defaultUnits: 25,
+          eatStepUnits: 5,
+          barColor: '#f7c85c',
+          stat: 'health',
+          barSprites: {
+            100: '../assets/Diseño_Proceso de despensa_Manzanas_100%.png',
+            80:  '../assets/Diseño_Proceso de despensa_Manzanas_80%.png',
+            60:  '../assets/Diseño_Proceso de despensa_Manzanas_60%.png',
+            40:  '../assets/Diseño_Proceso de despensa_Manzanas_40%.png',
+            20:  '../assets/Diseño_Proceso de despensa_Manzanas_20%.png',
+            0:   '../assets/Diseño_Proceso de despensa_Manzanas_0%.png'
+          }
+        },
+        hoja: {
+          label: 'HOJAS MÁGICAS',
+          icon: '../assets/Diseño_Proceso de despensa_Hojas_100%.png',
+          useBarSprite: true,
+          maxUnits: 25,
+          defaultUnits: 25,
+          eatStepUnits: 5,
+          barColor: '#76e07c',
+          stat: 'happiness',
+          barSprites: {
+            100: '../assets/Diseño_Proceso de despensa_Hojas_100%.png',
+            80:  '../assets/Diseño_Proceso de despensa_Hojas_80%.png',
+            60:  '../assets/Diseño_Proceso de despensa_Hojas_60%.png',
+            40:  '../assets/Diseño_Proceso de despensa_Hojas_40%.png',
+            20:  '../assets/Diseño_Proceso de despensa_Hojas_20%.png',
+            0:   '../assets/Diseño_Proceso de despensa_Hojas_0%.png'
+          }
+        },
+        agua: {
+          label: 'AGUA PURA',
+          icon: '../assets/Diseño_Proceso de despensa_Agua_100%.png',
+          useBarSprite: true,
+          maxUnits: 25,
+          defaultUnits: 25,
+          eatStepUnits: 5,
+          barColor: '#56d8ff',
+          stat: 'energy',
+          barSprites: {
+            100: '../assets/Diseño_Proceso de despensa_Agua_100%.png',
+            80:  '../assets/Diseño_Proceso de despensa_Agua_80%.png',
+            60:  '../assets/Diseño_Proceso de despensa_Agua_60%.png',
+            40:  '../assets/Diseño_Proceso de despensa_Agua_40%.png',
+            20:  '../assets/Diseño_Proceso de despensa_Agua_20%.png',
+            0:   '../assets/Diseño_Proceso de despensa_Agua_0%.png'
+          }
+        }
+      }
+    };
+
+    const defaultStock = {
+      manzana: pantryAssets.items.manzana.defaultUnits,
+      hoja: pantryAssets.items.hoja.defaultUnits,
+      agua: pantryAssets.items.agua.defaultUnits
+    };
+
+    function readPantryStock() {
+      const saved = localStorage.getItem('pantryStock');
+      if (!saved) {
+        localStorage.setItem('pantryStock', JSON.stringify(defaultStock));
+        return { ...defaultStock };
+      }
+      try {
+        const parsed = JSON.parse(saved);
+        return {
+          manzana: Math.max(0, Number(parsed.manzana ?? defaultStock.manzana)),
+          hoja: Math.max(0, Number(parsed.hoja ?? defaultStock.hoja)),
+          agua: Math.max(0, Number(parsed.agua ?? defaultStock.agua))
+        };
+      } catch (_) {
+        return { ...defaultStock };
+      }
+    }
+
+    function writePantryStock(nextStock) {
+      localStorage.setItem('pantryStock', JSON.stringify(nextStock));
+      return nextStock;
+    }
+
+    // 1. Cargar memoria global de HUDs y stock de despensa desde localStorage
+    const savedLevels = localStorage.getItem('userHudLevels');
+    let hudLevels = savedLevels ? JSON.parse(savedLevels) : { health: 25, happiness: 25, energy: 25 };
+    let pantryStock = readPantryStock();
+
+    const hudAssets = {
+      health: {
+        25: '../assets/Diseño_Huds_Salud 25.png',
+        50: '../assets/Diseño_Huds_Salud 50.png',
+        75: '../assets/Diseño_Huds_Salud 75.png',
+        100: '../assets/Diseño_Huds_Salud 100.png'
+      },
+      happiness: {
+        25: '../assets/Diseño_Huds_Felicidad 25.png',
+        50: '../assets/Diseño_Huds_Felicidad 50.png',
+        75: '../assets/Diseño_Huds_Felicidad 75.png',
+        100: '../assets/Diseño_Huds_Felicidad 100.png'
+      },
+      energy: {
+        25: '../assets/Diseño_Huds_Energia 25.png',
+        50: '../assets/Diseño_Huds_Energia 50.png',
+        75: '../assets/Diseño_Huds_Energia 75.png',
+        100: '../assets/Diseño_Huds_Energia 100.png'
+      }
+    };
+
+    let activeFoodType = null;
+    let hideBarTimeout = null;
+
+    // 2. Inicializar vista y sincronización entre pantallas (Cosecha / Despensa / Cocina)
+    window.addEventListener('DOMContentLoaded', () => {
+      syncPantryIcons();
+      updateAllHudsVisuals();
+      initStatDecay();
+      initFoodConsumptionDecay();
+      initDockGesture();
+      initCrossScreenStockSync();
+    });
+
+    function initCrossScreenStockSync() {
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'pantryStock') {
+          pantryStock = readPantryStock();
+          if (activeFoodType) {
+            renderFoodStatusBar(activeFoodType);
+          }
+        }
+        if (e.key === 'userHudLevels' && e.newValue) {
+          hudLevels = JSON.parse(e.newValue);
+          updateAllHudsVisuals();
+        }
+      });
+
+      window.addEventListener('pageshow', () => {
+        pantryStock = readPantryStock();
+        if (activeFoodType) {
+          renderFoodStatusBar(activeFoodType);
+        }
+      });
+    }
+
+    // Helper global para que Cosecha sume unidades al stock guardado en localStorage
+    window.addHarvestToPantry = function (itemType, harvestedUnits = 5) {
+      const cfg = pantryAssets.items[itemType];
+      if (!cfg) return 0;
+
+      const currentStock = readPantryStock();
+      const maxUnits = cfg.maxUnits || 25;
+      const gain = Math.max(0, Number(harvestedUnits || 0));
+
+      currentStock[itemType] = Math.min(maxUnits, currentStock[itemType] + gain);
+      pantryStock = writePantryStock(currentStock);
+
+      if (activeFoodType === itemType) {
+        renderFoodStatusBar(itemType);
+      }
+
+      return pantryStock[itemType];
+    };
+
+    function syncPantryIcons() {
+      const bgImg = document.getElementById('bg-despensa');
+      const avatarImg = document.getElementById('avatar-img');
+      if (bgImg && pantryAssets.background) bgImg.src = pantryAssets.background;
+      if (avatarImg && pantryAssets.avatar) avatarImg.src = pantryAssets.avatar;
+
+      const chest1Img = document.querySelector('#chest-1 .chest-img');
+      const chest2Img = document.querySelector('#chest-2 .chest-img');
+      const chest3Img = document.querySelector('#chest-3 .chest-img');
+      const chest4Img = document.querySelector('#chest-4 .chest-img');
+
+      if (chest1Img && pantryAssets.chestClosed1) chest1Img.src = pantryAssets.chestClosed1;
+      if (chest2Img && pantryAssets.chestClosed2) chest2Img.src = pantryAssets.chestClosed2;
+      if (chest3Img && pantryAssets.chestClosed1) chest3Img.src = pantryAssets.chestClosed1;
+      if (chest4Img && pantryAssets.chestClosed2) chest4Img.src = pantryAssets.chestClosed2;
+    }
+
+    function updateAllHudsVisuals() {
+      for (const type in hudLevels) {
+        const currentLevel = hudLevels[type];
+        const hudImg = document.getElementById(`img-hud-${type}`);
+        if (hudImg && hudAssets[type] && hudAssets[type][currentLevel]) {
+          hudImg.src = hudAssets[type][currentLevel];
+        }
+      }
+    }
+
+    function bumpHud(type, newLevel) {
+      const hudContainer = document.getElementById(`hud-${type}`);
+      const hudImg = document.getElementById(`img-hud-${type}`);
+
+      if (hudImg && hudAssets[type] && hudAssets[type][newLevel]) {
+        hudImg.src = hudAssets[type][newLevel];
+      }
+
+      if (hudContainer) {
+        hudContainer.classList.remove('hud-animate');
+        void hudContainer.offsetWidth;
+        hudContainer.classList.add('hud-animate');
+      }
+    }
+
+    // 3A. Desgaste automático de HUDs cada 1 minuto
+    function initStatDecay() {
+      setInterval(() => {
+        let changed = false;
+
+        if (hudLevels.energy > 25) {
+          hudLevels.energy -= 25;
+          changed = true;
+        }
+        if (hudLevels.happiness > 25) {
+          hudLevels.happiness -= 25;
+          changed = true;
+        }
+        if (hudLevels.health > 25) {
+          hudLevels.health -= 25;
+          changed = true;
+        }
+
+        if (changed) {
+          localStorage.setItem('userHudLevels', JSON.stringify(hudLevels));
+          updateAllHudsVisuals();
+        }
+      }, 60000);
+    }
+
+    // 3B. Consumir alimento (disminuye unidades y porcentaje en localStorage)
+    function consumeFood(itemType, unitsToEat) {
+      const cfg = pantryAssets.items[itemType];
+      if (!cfg) return;
+
+      const currentStock = readPantryStock();
+      const currentUnits = currentStock[itemType] || 0;
+      const step = typeof unitsToEat === 'number' ? unitsToEat : (cfg.eatStepUnits || 5);
+      if (currentUnits <= 0) return;
+
+      currentStock[itemType] = Math.max(0, currentUnits - step);
+      pantryStock = writePantryStock(currentStock);
+
+      if (activeFoodType === itemType) {
+        renderFoodStatusBar(itemType);
+      }
+    }
+
+    // Desgaste automático mientras el avatar come (cada 20s)
+    function initFoodConsumptionDecay() {
+      setInterval(() => {
+        let anyConsumed = false;
+        const latestStock = readPantryStock();
+
+        for (const type of ['manzana', 'hoja', 'agua']) {
+          if ((latestStock[type] || 0) > 0) {
+            consumeFood(type);
+            anyConsumed = true;
+          }
+        }
+
+        if (anyConsumed && activeFoodType) {
+          renderFoodStatusBar(activeFoodType);
+        }
+      }, 20000);
+    }
+
+    // Redondea el porcentaje al escalón de asset disponible (100, 80, 60, 40, 20, 0)
+    function getSpriteBucket(pct) {
+      const buckets = [100, 80, 60, 40, 20, 0];
+      for (const b of buckets) {
+        if (pct >= b - 10 && b > 0) return b;
+      }
+      return pct <= 0 ? 0 : 20;
+    }
+
+    // 4. Al tocar un cofre, mostrar su barra de alimento con el asset correspondiente
+    function openChest(itemType, event) {
+      const itemCfg = pantryAssets.items[itemType];
+      if (!itemCfg) return;
+
+      pantryStock = readPantryStock();
+      activeFoodType = itemType;
+
+      const btn = event && event.currentTarget ? event.currentTarget : null;
+      if (btn) {
+        btn.classList.remove('is-popping');
+        void btn.offsetWidth;
+        btn.classList.add('is-popping');
+      }
+
+      renderFoodStatusBar(itemType);
+
+      const panel = document.getElementById('food-status-panel');
+      if (panel) {
+        panel.classList.remove('is-hidden');
+        panel.classList.remove('is-popping');
+        void panel.offsetWidth;
+        panel.classList.add('is-popping');
+      }
+
+      if (hideBarTimeout) clearTimeout(hideBarTimeout);
+      hideBarTimeout = setTimeout(() => {
+        if (panel) panel.classList.add('is-hidden');
+      }, 4200);
+
+      const viewport = document.getElementById('despensa-viewport');
+      const vpRect = viewport.getBoundingClientRect();
+      let x = vpRect.width / 2;
+      let y = vpRect.height / 2;
+
+      if (btn) {
+        const btnRect = btn.getBoundingClientRect();
+        x = btnRect.left + btnRect.width / 2 - vpRect.left;
+        y = btnRect.top + btnRect.height / 2 - vpRect.top;
+      }
+
+      spawnParticles(x, y);
+    }
+
+    function renderFoodStatusBar(itemType) {
+      const cfg = pantryAssets.items[itemType];
+      if (!cfg) return;
+
+      const units = Math.max(0, Number(pantryStock[itemType] || 0));
+      const maxUnits = cfg.maxUnits || 25;
+      const pct = Math.max(0, Math.min(100, Math.round((units / maxUnits) * 100)));
+      const bucket = getSpriteBucket(pct);
+
+      const spriteEl = document.getElementById('food-bar-sprite');
+      const fallbackRow = document.getElementById('food-fallback-row');
+      const iconEl = document.getElementById('food-status-icon');
+      const titleEl = document.getElementById('food-status-title');
+      const fillEl = document.getElementById('food-meter-fill');
+      const readoutEl = document.getElementById('food-status-readout');
+
+      const spriteSrc = cfg.barSprites && cfg.barSprites[bucket];
+
+      if (cfg.useBarSprite && spriteEl && spriteSrc) {
+        spriteEl.src = spriteSrc;
+        spriteEl.alt = `${cfg.label} ${bucket}% (${units} UN.)`;
+        spriteEl.classList.remove('is-hidden');
+        if (fallbackRow) fallbackRow.classList.add('is-hidden');
+      } else {
+        if (spriteEl) spriteEl.classList.add('is-hidden');
+        if (fallbackRow) fallbackRow.classList.remove('is-hidden');
+        if (iconEl) {
+          iconEl.src = cfg.icon;
+          iconEl.alt = cfg.label;
+        }
+        if (titleEl) titleEl.textContent = cfg.label;
+        if (fillEl) {
+          fillEl.style.width = `${pct}%`;
+          fillEl.style.backgroundColor = cfg.barColor || '#f7c85c';
+        }
+        if (readoutEl) readoutEl.textContent = `${pct}% (${units} UN.)`;
+      }
+    }
+
+    function spawnParticles(x, y) {
+      const viewport = document.getElementById('despensa-viewport');
+      if (!viewport) return;
+
+      const symbols = ['✨', '⭐', '🌟'];
+      for (let i = 0; i < 5; i++) {
+        const particle = document.createElement('div');
+        particle.classList.add('floating-particle');
+        particle.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+        particle.style.left = `${x + (Math.random() * 50 - 25)}px`;
+        particle.style.top = `${y + (Math.random() * 25 - 12)}px`;
+        particle.style.fontSize = `${Math.floor(Math.random() * 8 + 16)}px`;
+        particle.style.animationDuration = `${0.65 + Math.random() * 0.3}s`;
+
+        viewport.appendChild(particle);
+
+        setTimeout(() => {
+          particle.remove();
+        }, 850);
+      }
+    }
+
+    // 5. Control del despliegue de los 8 docks mediante Gesto (Swipe vertical) o Tap
+    function initDockGesture() {
+      const nav = document.getElementById('action-nav');
+      const handle = document.getElementById('dock-gesture-handle');
+      if (!nav) return;
+
+      let startY = 0;
+      let isDragging = false;
+
+      function setExpanded(expand) {
+        nav.classList.toggle('is-expanded', expand);
+        nav.classList.toggle('is-collapsed', !expand);
+        if (handle) {
+          handle.setAttribute('aria-expanded', String(expand));
+        }
+      }
+
+      window.toggleExtraDocks = function () {
+        setExpanded(!nav.classList.contains('is-expanded'));
+      };
+
+      nav.addEventListener('touchstart', (e) => {
+        if (!e.touches || e.touches.length === 0) return;
+        startY = e.touches[0].clientY;
+        isDragging = true;
+      }, { passive: true });
+
+      nav.addEventListener('touchend', (e) => {
+        if (!isDragging || !e.changedTouches || e.changedTouches.length === 0) return;
+        const endY = e.changedTouches[0].clientY;
+        const deltaY = startY - endY;
+        isDragging = false;
+
+        if (deltaY > 24) {
+          setExpanded(true);
+        } else if (deltaY < -24) {
+          setExpanded(false);
+        }
+      }, { passive: true });
+
+      nav.addEventListener('mousedown', (e) => {
+        startY = e.clientY;
+        isDragging = true;
+      });
+
+      window.addEventListener('mouseup', (e) => {
+        if (!isDragging) return;
+        const deltaY = startY - e.clientY;
+        isDragging = false;
+
+        if (deltaY > 28) {
+          setExpanded(true);
+        } else if (deltaY < -28) {
+          setExpanded(false);
+        }
+      });
+    }
+  </script>
+</body>
+</html>

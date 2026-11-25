@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aetheria - Cocina</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/cocina.css">
+</head>
+<body>
+
+  <!-- Contenedor principal 390x844 -->
+  <main class="game-viewport">
+    
+    <!-- FONDO Y ESCENARIO DE LA COCINA -->
+    <div class="background-container">
+      <img src="../assets/Diseño_Fondo_Cocina.png" alt="Cocina de Aetheria" class="bg-image">
+    </div>
+
+    <!-- UI SUPERIOR: HUDS DE ESTADO -->
+    <div class="status-bars">
+      <!-- HUD 1: Vida -->
+      <div class="hud-container" id="hud-health">
+        <img src="../assets/Diseño_Huds_Salud 25.png" alt="HUD Vida" class="hud-img" id="img-hud-health">
+      </div>
+      <!-- HUD 2: Felicidad -->
+      <div class="hud-container" id="hud-happiness">
+        <img src="../assets/Diseño_Huds_Felicidad 25.png" alt="HUD Felicidad" class="hud-img" id="img-hud-happiness">
+      </div>
+      <!-- HUD 3: Energía -->
+      <div class="hud-container" id="hud-energy">
+        <img src="../assets/Diseño_Huds_Energia 25.png" alt="HUD Energia" class="hud-img" id="img-hud-energy">
+      </div>
+    </div>
+
+    <!-- ZONA DE ALIMENTOS EN EL ESTANTE (249x71 total, cada uno 71x71) -->
+    <div class="kitchen-items-container">
+      <!-- Comida 1: Sube Energía -->
+      <button type="button" class="food-btn" onclick="feedPet('energy', 25, event)">
+        <img src="../assets/Diseño_Alimento_2.png" alt="Comida Energía" class="food-icon">
+      </button>
+      <!-- Comida 2: Sube Salud -->
+      <button type="button" class="food-btn" onclick="feedPet('health', 25, event)">
+        <img src="../assets/Diseño_Alimento_1.png" alt="Comida Salud" class="food-icon">
+      </button>
+      <!-- Comida 3: Sube Felicidad -->
+      <button type="button" class="food-btn" onclick="feedPet('happiness', 25, event)">
+        <img src="../assets/Diseño_Alimento_3.png" alt="Comida Felicidad" class="food-icon">
+      </button>
+    </div>
+
+    <!-- ZONA CENTRAL: MASCOTA EN LA COCINA (212x212) -->
+    <div class="kitchen-pet-zone">
+      <div class="character-container" id="avatar-player">
+        <img src="../assets/Diseño_Avatar_Front.png" alt="Aetheria" class="avatar-img" id="avatar-img">
+      </div>
+    </div>
+
+    <!-- UI INFERIOR: 4 DOCKS VISIBLES + 4 EXTRA AL DESLIZAR (8 EN TOTAL) -->
+    <nav class="action-nav is-collapsed" id="action-nav" aria-label="Navegación de docks">
+      
+      <!-- Indicador / Pestaña táctil superior -->
+      <button
+        type="button"
+        class="dock-gesture-handle"
+        id="dock-gesture-handle"
+        onclick="toggleExtraDocks()"
+        aria-expanded="false"
+        aria-label="Desliza hacia arriba o toca para desplegar más docks"
+      >
+        <span class="gesture-bar"></span>
+      </button>
+
+      <!-- Apilamiento de 2 filas de 4 docks -->
+      <div class="docks-stack" id="docks-stack">
+        
+        <!-- FILA 1 (Docks principales siempre visibles) -->
+        <div class="docks-row docks-row-primary">
+          <a href="../index.html" class="nav-btn" title="Home">
+            <img src="../assets/Diseño_Docks_1.png" alt="Home" class="nav-icon">
+          </a>
+          <a href="Cocina.html" class="nav-btn" title="Minijuego">
+            <img src="../assets/Diseño_Docks_2.png" alt="Minijuego" class="nav-icon">
+          </a>
+          <a href="Alquimia.html" class="nav-btn active" title="Cocina">
+            <img src="../assets/Diseño_Docks_3.png" alt="Cocina" class="nav-icon">
+          </a>
+          <a href="Mini juego.html" class="nav-btn" title="Alquimia">
+            <img src="../assets/Diseño_Docks_4.png" alt="Alquimia" class="nav-icon">
+          </a>
+        </div>
+
+        <!-- FILA 2 (Docks extra que aparecen al hacer el gesto hacia arriba) -->
+        <div class="docks-row docks-row-secondary" id="extra-docks-row">
+          <a href="Dormitorio.html" class="nav-btn" title="Dormitorio">
+            <img src="../assets/Diseño_Docks_5.png" alt="Dormitorio" class="nav-icon">
+          </a>
+          <a href="Despensa.html" class="nav-btn" title="Cosecha">
+            <img src="../assets/Diseño_Docks_6.png" alt="Cosecha" class="nav-icon">
+          </a>
+          <a href="Santuario.html" class="nav-btn" title="Tienda">
+            <img src="../assets/Diseño_Docks_7.png" alt="Tienda" class="nav-icon">
+          </a>
+          <a href="Cosecha.html" class="nav-btn" title="Inventario">
+            <img src="../assets/Diseño_Docks_8.png" alt="Inventario" class="nav-icon">
+          </a>
+        </div>
+
+      </div>
+    </nav>
+
+  </main>
+
+  <!-- LÓGICA DE PERSISTENCIA, DESGASTE, ALIMENTACIÓN Y GESTO DE DOCKS -->
+  <script>
+    // 1. Cargar memoria global del localStorage
+    const savedLevels = localStorage.getItem('userHudLevels');
+    let hudLevels = savedLevels ? JSON.parse(savedLevels) : { health: 25, happiness: 25, energy: 25 };
+
+    const hudAssets = {
+      health: { 25: '../assets/Diseño_Huds_Salud 25.png', 50: '../assets/Diseño_Huds_Salud 50.png', 75: '../assets/Diseño_Huds_Salud 75.png', 100: '../assets/Diseño_Huds_Salud 100.png' },
+      happiness: { 25: '../assets/Diseño_Huds_Felicidad 25.png', 50: '../assets/Diseño_Huds_Felicidad 50.png', 75: '../assets/Diseño_Huds_Felicidad 75.png', 100: '../assets/Diseño_Huds_Felicidad 100.png' },
+      energy: { 25: '../assets/Diseño_Huds_Energia 25.png', 50: '../assets/Diseño_Huds_Energia 50.png', 75: '../assets/Diseño_Huds_Energia 75.png', 100: '../assets/Diseño_Huds_Energia 100.png' }
+    };
+
+    // 2. Pintar HUDs, arrancar desgaste y activar gesto de docks al cargar
+    window.addEventListener('DOMContentLoaded', () => {
+      updateAllHudsVisuals();
+      initStatDecay();
+      initDockGesture();
+    });
+
+    function updateAllHudsVisuals() {
+      for (let type in hudLevels) {
+        const currentLevel = hudLevels[type];
+        const hudImg = document.getElementById(`img-hud-${type}`);
+        if (hudImg && hudAssets[type][currentLevel]) {
+          hudImg.src = hudAssets[type][currentLevel];
+        }
+      }
+    }
+
+    // 3. Temporizador de desgaste automático (cada 1 minuto)
+    function initStatDecay() {
+      setInterval(() => {
+        let changed = false;
+
+        if (hudLevels.energy > 25) {
+          hudLevels.energy -= 25;
+          changed = true;
+        }
+        if (hudLevels.happiness > 25) {
+          hudLevels.happiness -= 25;
+          changed = true;
+        }
+        if (hudLevels.health > 25) {
+          hudLevels.health -= 25;
+          changed = true;
+        }
+
+        if (changed) {
+          localStorage.setItem('userHudLevels', JSON.stringify(hudLevels));
+          updateAllHudsVisuals();
+          console.log("Desgaste aplicado en la cocina:", hudLevels);
+        }
+      }, 60000);
+    }
+
+    // 4. Función unificada de alimentación con vuelo y partículas doradas
+    function feedPet(type, amount, event) {
+      if (hudLevels[type] >= 100) return;
+
+      const btn = event.currentTarget;
+      const btnRect = btn.getBoundingClientRect();
+      const viewportRect = document.querySelector('.game-viewport').getBoundingClientRect();
+
+      const avatarEl = document.getElementById('avatar-player');
+      const avatarRect = avatarEl.getBoundingClientRect();
+
+      const startX = btnRect.left + btnRect.width / 2 - viewportRect.left;
+      const startY = btnRect.top + btnRect.height / 2 - viewportRect.top;
+      const targetX = avatarRect.left + avatarRect.width / 2 - viewportRect.left;
+      const targetY = avatarRect.top + avatarRect.height / 2 - viewportRect.top;
+
+      const dx = targetX - startX;
+      const dy = targetY - startY;
+
+      const flyingFood = document.createElement('img');
+      flyingFood.src = btn.querySelector('.food-icon').src;
+      flyingFood.classList.add('flying-food');
+      flyingFood.style.left = `${startX - 25}px`;
+      flyingFood.style.top = `${startY - 25}px`;
+      flyingFood.style.setProperty('--dx', `${dx}px`);
+      flyingFood.style.setProperty('--dy', `${dy}px`);
+      document.querySelector('.game-viewport').appendChild(flyingFood);
+
+      setTimeout(() => {
+        flyingFood.remove();
+
+        hudLevels[type] = Math.min(100, hudLevels[type] + amount);
+        localStorage.setItem('userHudLevels', JSON.stringify(hudLevels));
+
+        const newLevel = hudLevels[type];
+        const hudContainer = document.getElementById(`hud-${type}`);
+        const hudImg = document.getElementById(`img-hud-${type}`);
+
+        if (hudImg && hudAssets[type][newLevel]) {
+          hudImg.src = hudAssets[type][newLevel];
+        }
+
+        if (hudContainer) {
+          hudContainer.classList.remove('hud-animate');
+          void hudContainer.offsetWidth;
+          hudContainer.classList.add('hud-animate');
+        }
+
+        spawnParticles(targetX, targetY);
+        console.log(`¡Alimentado con éxito! Nuevo estado:`, hudLevels);
+      }, 420);
+    }
+
+    // 5. Función de brillos y estrellas doradas
+    function spawnParticles(x, y) {
+      const symbols = ['✨', '⭐', '🌟'];
+      for (let i = 0; i < 5; i++) {
+        const particle = document.createElement('div');
+        particle.classList.add('floating-particle');
+        particle.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+        particle.style.left = `${x + (Math.random() * 60 - 30)}px`;
+        particle.style.top = `${y + (Math.random() * 30 - 15)}px`;
+        particle.style.fontSize = `${Math.floor(Math.random() * 10 + 16)}px`;
+        particle.style.animationDuration = `${0.6 + Math.random() * 0.4}s`;
+        
+        document.querySelector('.game-viewport').appendChild(particle);
+
+        setTimeout(() => {
+          particle.remove();
+        }, 800);
+      }
+    }
+
+    // 6. Control del despliegue de los 8 docks mediante Gesto (Swipe vertical) o Tap
+    function initDockGesture() {
+      const nav = document.getElementById('action-nav');
+      const handle = document.getElementById('dock-gesture-handle');
+      if (!nav) return;
+
+      let startY = 0;
+      let isDragging = false;
+
+      function setExpanded(expand) {
+        nav.classList.toggle('is-expanded', expand);
+        nav.classList.toggle('is-collapsed', !expand);
+        if (handle) {
+          handle.setAttribute('aria-expanded', String(expand));
+        }
+      }
+
+      window.toggleExtraDocks = function () {
+        setExpanded(!nav.classList.contains('is-expanded'));
+      };
+
+      // Gestos Táctiles (Móvil)
+      nav.addEventListener('touchstart', (e) => {
+        if (!e.touches || e.touches.length === 0) return;
+        startY = e.touches[0].clientY;
+        isDragging = true;
+      }, { passive: true });
+
+      nav.addEventListener('touchend', (e) => {
+        if (!isDragging || !e.changedTouches || e.changedTouches.length === 0) return;
+        const endY = e.changedTouches[0].clientY;
+        const deltaY = startY - endY;
+        isDragging = false;
+
+        if (deltaY > 24) {
+          setExpanded(true);
+        } else if (deltaY < -24) {
+          setExpanded(false);
+        }
+      }, { passive: true });
+
+      // Soporte Mouse (Escritorio)
+      nav.addEventListener('mousedown', (e) => {
+        startY = e.clientY;
+        isDragging = true;
+      });
+
+      window.addEventListener('mouseup', (e) => {
+        if (!isDragging) return;
+        const deltaY = startY - e.clientY;
+        isDragging = false;
+
+        if (deltaY > 28) {
+          setExpanded(true);
+        } else if (deltaY < -28) {
+          setExpanded(false);
+        }
+      });
+    }
+  </script>
+</body>
+</html>

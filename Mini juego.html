@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aetheria - Atrapa Esencia</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="../css/minijuego.css">
+</head>
+<body>
+
+  <!-- Contenedor principal 390x844 -->
+  <main class="game-viewport">
+    
+    <div class="minigame-screen">
+      
+      <!-- Fondo Nocturno del Bosque -->
+      <div class="background-container">
+        <img src="../assets/Diseño_Fondo_Minijuego.png" alt="Bosque Nocturno" class="bg-image">
+      </div>
+
+      <!-- HUDs superiores con imágenes reales desde assets -->
+      <div class="status-bars">
+        <div id="hud-health" class="hud-container">
+          <img id="img-hud-health" src="../assets/Diseño_Huds_Salud 25.png" alt="Salud" class="hud-img">
+        </div>
+        <div id="hud-happiness" class="hud-container">
+          <img id="img-hud-happiness" src="../assets/Diseño_Huds_Felicidad 25.png" alt="Felicidad" class="hud-img">
+        </div>
+        <div id="hud-energy" class="hud-container">
+          <img id="img-hud-energy" src="../assets/Diseño_Huds_Energia 25.png" alt="Energía" class="hud-img">
+        </div>
+      </div>
+
+      <!-- Contenedor del Avatar (212x212px optimizado para GPU) -->
+      <div id="avatar-player">
+        <img id="avatar-img" src="../assets/Diseño_Avatar_Front.png" alt="Aetheria" class="avatar-game-img">
+      </div>
+
+      <!-- Contenedor donde aparecerán las esferas cayendo -->
+      <div id="orbs-container"></div>
+
+      <!-- Controles de Flechas (Sin recuadros, 50x50px cada una) -->
+      <div class="arrow-controls">
+        <img src="../assets/Diseño_Flechas_Izquierda.png" alt="Izquierda" class="arrow-btn-img" onmousedown="startMoving('left')" onmouseup="stopMoving()" ontouchstart="startMoving('left')" ontouchend="stopMoving()">
+        <img src="../assets/Diseño_Flechas_Derecha.png" alt="Derecha" class="arrow-btn-img" onmousedown="startMoving('right')" onmouseup="stopMoving()" ontouchstart="startMoving('right')" ontouchend="stopMoving()">
+      </div>
+
+    </div>
+
+    <!-- UI INFERIOR: 4 DOCKS VISIBLES + 4 EXTRA AL DESLIZAR (8 EN TOTAL) -->
+    <nav class="action-nav is-collapsed" id="action-nav" aria-label="Navegación de docks">
+      
+      <!-- Indicador / Pestaña táctil superior -->
+      <button
+        type="button"
+        class="dock-gesture-handle"
+        id="dock-gesture-handle"
+        onclick="toggleExtraDocks()"
+        aria-expanded="false"
+        aria-label="Desliza hacia arriba o toca para desplegar más docks"
+      >
+        <span class="gesture-bar"></span>
+      </button>
+
+      <!-- Apilamiento de 2 filas de 4 docks -->
+      <div class="docks-stack" id="docks-stack">
+        
+        <!-- FILA 1 (Docks principales siempre visibles) -->
+        <div class="docks-row docks-row-primary">
+          <a href="../index.html" class="nav-btn" title="Home">
+            <img src="../assets/Diseño_Docks_1.png" alt="Home" class="nav-icon">
+          </a>
+          <a href="Cocina.html" class="nav-btn active" title="Minijuego">
+            <img src="../assets/Diseño_Docks_2.png" alt="Minijuego" class="nav-icon">
+          </a>
+          <a href="Alquimia.html" class="nav-btn" title="Cocina">
+            <img src="../assets/Diseño_Docks_3.png" alt="Cocina" class="nav-icon">
+          </a>
+          <a href="Mini juego.html" class="nav-btn" title="Alquimia">
+            <img src="../assets/Diseño_Docks_4.png" alt="Alquimia" class="nav-icon">
+          </a>
+        </div>
+
+        <!-- FILA 2 (Docks extra que aparecen al hacer el gesto hacia arriba) -->
+        <div class="docks-row docks-row-secondary" id="extra-docks-row">
+          <a href="Dormitorio.html" class="nav-btn" title="Dormitorio">
+            <img src="../assets/Diseño_Docks_5.png" alt="Dormitorio" class="nav-icon">
+          </a>
+          <a href="Cosecha.html" class="nav-btn" title="Cosecha">
+            <img src="../assets/Diseño_Docks_6.png" alt="Cosecha" class="nav-icon">
+          </a>
+          <a href="Tienda.html" class="nav-btn" title="Tienda">
+            <img src="../assets/Diseño_Docks_7.png" alt="Tienda" class="nav-icon">
+          </a>
+          <a href="Cosecha.html" class="nav-btn" title="Inventario">
+            <img src="../assets/Diseño_Docks_8.png" alt="Inventario" class="nav-icon">
+          </a>
+        </div>
+
+      </div>
+    </nav>
+
+  </main>
+
+  <!-- ========================================== -->
+  <!-- LÓGICA DEL MINI-JUEGO Y LOS SPRITES DE PASOS-->
+  <!-- ========================================== -->
+  <script>
+    const avatar = document.getElementById('avatar-player');
+    const avatarImg = document.getElementById('avatar-img');
+    const viewport = document.querySelector('.game-viewport');
+    
+    let avatarX = 89; // Posición centrada inicial
+    let moveDirection = null;
+    let currentVelocity = 0;   // Velocidad actual para la inercia
+    let isLoopRunning = false; // Control del bucle suave
+    let moveAnimId = null;
+    let walkFrame = 1;
+    let frameTimer = 0;
+
+    // Posicionar avatar al inicio
+    avatar.style.transform = `translateX(${avatarX}px)`;
+
+    // Bucle de movimiento con inercia y frenado suave (60 FPS)
+    function gameLoop() {
+      const maxWidth = viewport.clientWidth - 212;
+
+      // 1. Definir la velocidad objetivo según el botón presionado
+      let targetVelocity = 0;
+      if (moveDirection === 'left' && avatarX > 0) {
+        targetVelocity = -2.8;
+      } else if (moveDirection === 'right' && avatarX < maxWidth) {
+        targetVelocity = 2.8;
+      }
+
+      // 2. Aplicar inercia (Lerp): se acerca gradualmente a la velocidad objetivo
+      currentVelocity += (targetVelocity - currentVelocity) * 0.18;
+
+      // 3. Actualizar posición con la velocidad suavizada
+      avatarX += currentVelocity;
+
+      // Limitar dentro de los bordes de la pantalla
+      if (avatarX < 0) avatarX = 0;
+      if (avatarX > maxWidth) avatarX = maxWidth;
+
+      // Mover mediante GPU
+      avatar.style.transform = `translateX(${avatarX}px)`;
+
+      // 4. Control de pasos dinámico según el movimiento real
+      if (Math.abs(currentVelocity) > 0.2) {
+        frameTimer++;
+        if (frameTimer % 22 === 0) {
+          walkFrame = walkFrame === 1 ? 2 : 1;
+          
+          if (currentVelocity < 0) {
+            avatarImg.src = `../assets/Diseño_Avatar_Side 2_Walk ${walkFrame}.png`;
+          } else {
+            avatarImg.src = `../assets/Diseño_Avatar_Side 1_Walk ${walkFrame}.png`;
+          }
+        }
+      } else if (moveDirection === null) {
+        avatarImg.src = '../assets/Diseño_Avatar_Front.png';
+        walkFrame = 1;
+      }
+
+      // 5. Mantener el bucle activo mientras haya movimiento o inercia deslizándose
+      if (moveDirection !== null || Math.abs(currentVelocity) > 0.05) {
+        moveAnimId = requestAnimationFrame(gameLoop);
+      } else {
+        isLoopRunning = false;
+      }
+    }
+
+    function startMoving(direction) {
+      moveDirection = direction;
+      if (!isLoopRunning) {
+        isLoopRunning = true;
+        cancelAnimationFrame(moveAnimId);
+        moveAnimId = requestAnimationFrame(gameLoop);
+      }
+    }
+
+    function stopMoving() {
+      moveDirection = null;
+    }
+
+    // Eventos globales para soltar el botón sin trabarse
+    window.addEventListener('mouseup', stopMoving);
+    window.addEventListener('touchend', stopMoving);
+
+    /* ========================================================== */
+    /* CONFIGURACIÓN DE HUDs Y ESFERAS                            */
+    /* ========================================================== */
+    
+    const savedLevels = localStorage.getItem('userHudLevels');
+    const hudLevels = savedLevels ? JSON.parse(savedLevels) : { health: 25, happiness: 25, energy: 25 };
+
+    const hudAssets = {
+      health: { 25: '../assets/Diseño_Huds_Salud 25.png', 50: '../assets/Diseño_Huds_Salud 50.png', 75: '../assets/Diseño_Huds_Salud 75.png', 100: '../assets/Diseño_Huds_Salud 100.png' },
+      happiness: { 25: '../assets/Diseño_Huds_Felicidad 25.png', 50: '../assets/Diseño_Huds_Felicidad 50.png', 75: '../assets/Diseño_Huds_Felicidad 75.png', 100: '../assets/Diseño_Huds_Felicidad 100.png' },
+      energy: { 25: '../assets/Diseño_Huds_Energia 25.png', 50: '../assets/Diseño_Huds_Energia 50.png', 75: '../assets/Diseño_Huds_Energia 75.png', 100: '../assets/Diseño_Huds_Energia 100.png' }
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      for (let type in hudLevels) {
+        const currentLevel = hudLevels[type];
+        const hudImg = document.getElementById(`img-hud-${type}`);
+        if (hudImg && hudAssets[type][currentLevel]) {
+          hudImg.src = hudAssets[type][currentLevel];
+        }
+      }
+
+      initStatDecay();
+      initDockGesture();
+    });
+
+    const orbsContainer = document.getElementById('orbs-container');
+    const orbTypes = [
+      { type: 'health', img: '../assets/Diseño_Esferas_3.png' },    
+      { type: 'energy', img: '../assets/Diseño_Esferas_2.png' },    
+      { type: 'happiness', img: '../assets/Diseño_Esferas_1.png' } 
+    ];
+
+    function spawnOrb() {
+      const orb = document.createElement('img');
+      orb.classList.add('falling-orb');
+      
+      const randomType = orbTypes[Math.floor(Math.random() * orbTypes.length)];
+      orb.dataset.type = randomType.type;
+      orb.src = randomType.img;
+      orb.alt = 'Esfera de Esencia';
+      
+      const randomX = Math.floor(Math.random() * 300) + 30;
+      orb.style.left = randomX + 'px';
+      orb.style.top = '0px';
+
+      orbsContainer.appendChild(orb);
+
+      let orbY = 0;
+      let fallInterval = setInterval(() => {
+        orbY += 4;
+        orb.style.top = orbY + 'px';
+
+        if (orbY >= 530 && orbY <= 650) {
+          if (avatarX + 212 > orb.offsetLeft && avatarX < orb.offsetLeft + 32) {
+            updateHud(randomType.type);
+            orb.remove();
+            clearInterval(fallInterval);
+          }
+        }
+
+        if (orbY > 750) {
+          orb.remove();
+          clearInterval(fallInterval);
+        }
+      }, 30);
+    }
+
+    function updateHud(type) {
+      if (hudLevels[type] < 100) {
+        hudLevels[type] += 25;
+      }
+
+      localStorage.setItem('userHudLevels', JSON.stringify(hudLevels));
+
+      const newLevel = hudLevels[type];
+      const hudContainer = document.getElementById(`hud-${type}`);
+      const hudImg = document.getElementById(`img-hud-${type}`);
+
+      if (hudImg && hudAssets[type][newLevel]) {
+        hudImg.src = hudAssets[type][newLevel];
+      }
+
+      if (hudContainer) {
+        hudContainer.classList.remove('hud-animate');
+        void hudContainer.offsetWidth;
+        hudContainer.classList.add('hud-animate');
+      }
+    }
+
+    function initStatDecay() {
+      setInterval(() => {
+        let changed = false;
+
+        if (hudLevels.energy > 25) {
+          hudLevels.energy -= 25;
+          changed = true;
+        }
+        if (hudLevels.happiness > 25) {
+          hudLevels.happiness -= 25;
+          changed = true;
+        }
+        if (hudLevels.health > 25) {
+          hudLevels.health -= 25;
+          changed = true;
+        }
+
+        if (changed) {
+          localStorage.setItem('userHudLevels', JSON.stringify(hudLevels));
+
+          for (let type in hudLevels) {
+            const currentLevel = hudLevels[type];
+            const hudImg = document.getElementById(`img-hud-${type}`) || document.getElementById(`home-img-hud-${type}`);
+            
+            if (hudImg && hudAssets[type][currentLevel]) {
+              hudImg.src = hudAssets[type][currentLevel];
+            }
+          }
+        }
+      }, 60000);
+    }
+
+    // Control del despliegue mediante Gesto (Swipe vertical) o Tap
+    function initDockGesture() {
+      const nav = document.getElementById('action-nav');
+      const handle = document.getElementById('dock-gesture-handle');
+      if (!nav) return;
+
+      let startY = 0;
+      let isDragging = false;
+
+      function setExpanded(expand) {
+        nav.classList.toggle('is-expanded', expand);
+        nav.classList.toggle('is-collapsed', !expand);
+        if (handle) {
+          handle.setAttribute('aria-expanded', String(expand));
+        }
+      }
+
+      window.toggleExtraDocks = function () {
+        setExpanded(!nav.classList.contains('is-expanded'));
+      };
+
+      // Gestos Táctiles (Móvil)
+      nav.addEventListener('touchstart', (e) => {
+        if (!e.touches || e.touches.length === 0) return;
+        startY = e.touches[0].clientY;
+        isDragging = true;
+      }, { passive: true });
+
+      nav.addEventListener('touchend', (e) => {
+        if (!isDragging || !e.changedTouches || e.changedTouches.length === 0) return;
+        const endY = e.changedTouches[0].clientY;
+        const deltaY = startY - endY;
+        isDragging = false;
+
+        if (deltaY > 24) {
+          setExpanded(true);
+        } else if (deltaY < -24) {
+          setExpanded(false);
+        }
+      }, { passive: true });
+
+      // Soporte Mouse (Escritorio)
+      nav.addEventListener('mousedown', (e) => {
+        startY = e.clientY;
+        isDragging = true;
+      });
+
+      window.addEventListener('mouseup', (e) => {
+        if (!isDragging) return;
+        const deltaY = startY - e.clientY;
+        isDragging = false;
+
+        if (deltaY > 28) {
+          setExpanded(true);
+        } else if (deltaY < -28) {
+          setExpanded(false);
+        }
+      });
+    }
+
+    setInterval(spawnOrb, 2200);
+  </script>
+</body>
+</html>

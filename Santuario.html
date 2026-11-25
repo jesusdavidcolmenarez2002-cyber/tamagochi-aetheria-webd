@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aetheria - Cosecha de Agua</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+  <link rel="stylesheet" href="../css/santuario.css" />
+</head>
+<body>
+
+  <main class="game-viewport" id="agua-viewport">
+
+    <!-- FONDO DEL SANTUARIO DE AGUA -->
+    <div class="background-container">
+      <img src="../assets/Diseño_Fondo_Cosecha de agua.png" alt="Santuario de Agua Mística" class="bg-image" id="bg-santuario" />
+    </div>
+
+    <!-- FUENTE MÍSTICA ANIMADA (SIEMPRE VISIBLE) -->
+    <div class="fountain-layer" id="fountain-layer">
+      <img
+        src="../assets/Diseño_Fuente_1.png"
+        alt="Fuente de Agua Mística"
+        class="fountain-img"
+        id="fountain-sprite"
+      />
+      <div class="fountain-mystic-glow" aria-hidden="true"></div>
+    </div>
+
+    <!-- OVERLAY OSCURO DURANTE LA EXTRACCIÓN -->
+    <div class="water-dark-overlay" id="water-dark-overlay" aria-hidden="true"></div>
+
+    <!-- UI SUPERIOR: HUDS DE ESTADO -->
+    <div class="status-bars">
+      <div class="hud-container" id="hud-health">
+        <img src="../assets/Diseño_Huds_Salud 25.png" alt="HUD Vida" class="hud-img" id="img-hud-health" />
+      </div>
+      <div class="hud-container" id="hud-happiness">
+        <img src="../assets/Diseño_Huds_Felicidad 25.png" alt="HUD Felicidad" class="hud-img" id="img-hud-happiness" />
+      </div>
+      <div class="hud-container" id="hud-energy">
+        <img src="../assets/Diseño_Huds_Energia 25.png" alt="HUD Energía" class="hud-img" id="img-hud-energy" />
+      </div>
+    </div>
+
+    <!-- BOTÓN "COMENZAR" PARA INICIAR LA EXTRACCIÓN DE AGUA -->
+    <button
+      type="button"
+      class="water-start-btn"
+      id="water-start-btn"
+      onclick="startWaterExtraction()"
+      aria-label="Comenzar extracción de agua"
+    >
+      <img
+        src="../assets/Diseño_Boton_Comenzar.png"
+        alt="Comenzar"
+        class="water-start-img"
+      />
+    </button>
+
+    <!-- BARRA DE PROCESO DE EXTRACCIÓN (0% A 100%) -->
+    <div class="water-progress-panel is-hidden" id="water-progress-panel">
+      <img
+        src="../assets/Diseño_Proceso de extraer_0%.PNG"
+        alt="Progreso de Extracción de Agua"
+        class="water-bar-sprite"
+        id="water-bar-sprite"
+      />
+    </div>
+
+    <!-- ZONA DEL AVATAR -->
+    <div class="water-pet-zone">
+      <div class="character-container is-idle">
+        <img src="../assets/Diseño_Avatar_Front.png" alt="Aetheria" class="avatar-img" />
+      </div>
+    </div>
+
+    <!-- UI INFERIOR: DOCKS -->
+    <nav class="action-nav is-collapsed" id="action-nav">
+      <button type="button" class="dock-gesture-handle" onclick="toggleExtraDocks()">
+        <span class="gesture-bar"></span>
+      </button>
+      <div class="docks-stack">
+        <div class="docks-row docks-row-primary">
+          <a href="../index.html" class="nav-btn"><img src="../assets/Diseño_Docks_1.png" alt="Home" class="nav-icon" /></a>
+          <a href="Cosecha.html" class="nav-btn"><img src="../assets/Diseño_Docks_2.png" alt="Cosecha" class="nav-icon" /></a>
+          <a href="Alquimia.html" class="nav-btn"><img src="../assets/Diseño_Docks_3.png" alt="Alquimia" class="nav-icon" /></a>
+          <a href="Mini juego.html" class="nav-btn"><img src="../assets/Diseño_Docks_4.png" alt="Minijuego" class="nav-icon" /></a>
+        </div>
+        <div class="docks-row docks-row-secondary">
+          <a href="Dormitorio.html" class="nav-btn"><img src="../assets/Diseño_Docks_5.png" alt="Dormitorio" class="nav-icon" /></a>
+          <a href="Despensa.html" class="nav-btn"><img src="../assets/Diseño_Docks_6.png" alt="Despensa" class="nav-icon" /></a>
+          <a href="Santuario.html" class="nav-btn"><img src="../assets/Diseño_Docks_7.png" alt="Tienda" class="nav-icon" /></a>
+          <a href="Cosecha.html" class="nav-btn"><img src="../assets/Diseño_Docks_8.png" alt="Inventario" class="nav-icon" /></a>
+        </div>
+      </div>
+    </nav>
+
+  </main>
+
+  <script>
+    // ==========================================================
+    // ASSETS Y CONFIGURACIÓN DE EXTRACCIÓN DE AGUA
+    // ==========================================================
+    const waterExtractionSprites = {
+      0:   '../assets/Diseño_Proceso de extraer_0%.PNG',
+      20:  '../assets/Diseño_Proceso de extraer_20%.PNG',
+      40:  '../assets/Diseño_Proceso de extraer_40%.PNG',
+      60:  '../assets/Diseño_Proceso de extraer_60%.PNG',
+      80:  '../assets/Diseño_Proceso de extraer_80%.PNG',
+      100: '../assets/Diseño_Proceso de extraer_100%.PNG'
+    };
+
+    const fountainFrames = [
+      '../assets/Diseño_Fuente_1.png',
+      '../assets/Diseño_Fuente_2.png',
+    ];
+
+    // Precarga de sprites de extracción y de fuente
+    Object.values(waterExtractionSprites).forEach((src) => {
+      const img = new Image();
+      img.src = src;
+    });
+
+    fountainFrames.forEach((src) => {
+      const img = new Image();
+      img.src = src;
+    });
+
+    // Animación continua de la fuente de agua (nunca desaparece)
+    let fountainFrameIndex = 0;
+    const FOUNTAIN_FRAME_MS = 240;
+
+    setInterval(() => {
+      const fountainEl = document.getElementById('fountain-sprite');
+      if (!fountainEl) return;
+      fountainFrameIndex = (fountainFrameIndex + 1) % fountainFrames.length;
+      fountainEl.src = fountainFrames[fountainFrameIndex];
+    }, FOUNTAIN_FRAME_MS);
+
+    const WATER_STEP_DURATION_MS = 450;
+    const WATER_HARVEST_YIELD = 5;
+
+    let isExtractingWater = false;
+    let waterStepTimeout = null;
+
+    // Sincronizar agua cosechada con el stock persistente de Despensa
+    function addWaterToPantry(units = WATER_HARVEST_YIELD) {
+      const defaultStock = { manzana: 25, hoja: 25, agua: 25 };
+      const saved = localStorage.getItem('pantryStock');
+      let currentStock = saved ? JSON.parse(saved) : defaultStock;
+
+      const maxUnits = 25;
+      const currentWater = Number(currentStock.agua || 0);
+      currentStock.agua = Math.min(maxUnits, currentWater + units);
+
+      localStorage.setItem('pantryStock', JSON.stringify(currentStock));
+    }
+
+    // Iniciar extracción al tocar "Comenzar"
+    function startWaterExtraction() {
+      if (isExtractingWater) return;
+
+      isExtractingWater = true;
+
+      const startBtn = document.getElementById('water-start-btn');
+      const darkOverlay = document.getElementById('water-dark-overlay');
+      const progressPanel = document.getElementById('water-progress-panel');
+      const barSprite = document.getElementById('water-bar-sprite');
+
+      startBtn.classList.add('is-hidden');
+      darkOverlay.classList.add('is-active');
+      progressPanel.classList.remove('is-hidden');
+
+      const steps = [0, 20, 40, 60, 80, 100];
+      barSprite.src = waterExtractionSprites[steps[0]];
+
+      let stepIndex = 0;
+
+      function advanceWaterStep() {
+        stepIndex++;
+        if (stepIndex < steps.length) {
+          const pct = steps[stepIndex];
+          barSprite.src = waterExtractionSprites[pct];
+          waterStepTimeout = setTimeout(advanceWaterStep, WATER_STEP_DURATION_MS);
+        } else {
+          waterStepTimeout = setTimeout(finishWaterExtraction, WATER_STEP_DURATION_MS);
+        }
+      }
+
+      waterStepTimeout = setTimeout(advanceWaterStep, WATER_STEP_DURATION_MS);
+    }
+
+    // Culminar extracción y enviar agua a la despensa
+    function finishWaterExtraction() {
+      if (waterStepTimeout) {
+        clearTimeout(waterStepTimeout);
+        waterStepTimeout = null;
+      }
+
+      const startBtn = document.getElementById('water-start-btn');
+      const darkOverlay = document.getElementById('water-dark-overlay');
+      const progressPanel = document.getElementById('water-progress-panel');
+      const barSprite = document.getElementById('water-bar-sprite');
+
+      darkOverlay.classList.remove('is-active');
+      progressPanel.classList.add('is-hidden');
+      barSprite.src = waterExtractionSprites[0];
+      startBtn.classList.remove('is-hidden');
+
+      addWaterToPantry(WATER_HARVEST_YIELD);
+
+      isExtractingWater = false;
+    }
+
+    // Gesto dock
+    function toggleExtraDocks() {
+      const nav = document.getElementById('action-nav');
+      if (nav) nav.classList.toggle('is-expanded');
+    }
+  </script>
+</body>
+</html>
